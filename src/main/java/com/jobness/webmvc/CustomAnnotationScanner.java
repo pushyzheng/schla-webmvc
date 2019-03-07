@@ -12,9 +12,9 @@ import java.util.List;
  * @author Pushy
  * @since 2019/3/7 12:57
  */
-public class SpringAnnotationScanner extends ClassPathBeanDefinitionScanner {
+public class CustomAnnotationScanner extends ClassPathBeanDefinitionScanner {
 
-    public SpringAnnotationScanner(BeanDefinitionRegistry registry) {
+    public CustomAnnotationScanner(BeanDefinitionRegistry registry) {
         super(registry);
     }
 

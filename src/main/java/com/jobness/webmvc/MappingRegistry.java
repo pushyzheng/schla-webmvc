@@ -32,4 +32,9 @@ public class MappingRegistry {
         return methodControllerMapping.get(method);
     }
 
+    @Deprecated
+    public static void printUrlMethodMapping() {
+        System.out.println(urlMethodMapping);
+    }
+
 }

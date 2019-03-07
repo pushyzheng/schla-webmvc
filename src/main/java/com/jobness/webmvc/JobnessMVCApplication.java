@@ -3,10 +3,10 @@ package com.jobness.webmvc;
 import com.jobness.webmvc.annotation.RequestMapping;
 import com.jobness.webmvc.annotation.RestController;
 import com.jobness.webmvc.netty.HttpServer;
+import io.netty.util.Mapping;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
-import sun.misc.Request;
 
 import java.lang.reflect.Method;
 import java.util.Map;
@@ -24,8 +24,8 @@ public class JobnessMVCApplication {
 
         GenericApplicationContext context = new AnnotationConfigApplicationContext(basePackage);
 
-        // 创建 SpringAnnotationScanner 对象，通过Spring扫描自定义注解类
-        SpringAnnotationScanner serviceScanner = new SpringAnnotationScanner(context);
+        // 创建 CustomAnnotationScanner 对象，通过Spring扫描自定义注解类
+        CustomAnnotationScanner serviceScanner = new CustomAnnotationScanner(context);
         serviceScanner.registerTypeFilter(RestController.class);
         serviceScanner.scan(basePackage);
 
@@ -52,10 +52,13 @@ public class JobnessMVCApplication {
                         RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
                         url.append(requestMapping.value());
                         MappingRegistry.registerMapping(url.toString(), method, controller);
+                        url = new StringBuilder().append(restController.value());
                     }
                 }
             }
         }
+
+        MappingRegistry.printUrlMethodMapping();
     }
 
     public static void main(String[] args) {
