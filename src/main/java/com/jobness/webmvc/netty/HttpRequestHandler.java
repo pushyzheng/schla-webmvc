@@ -12,7 +12,8 @@ import com.jobness.webmvc.pojo.HttpResponse;
 import io.netty.util.CharsetUtil;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,10 +27,11 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             send100Continue(ctx);
         }
 
-        String requestUrl = request.uri();
-        Method method = MappingRegistry.getUrlMethod(requestUrl);
+        Method method = MappingRegistry.getUrlMethod(request.uri());
         Object data;
         HttpResponseStatus status;
+        // 构造Response对象，注入到客户视图函数中
+        HttpResponse resp = new HttpResponse();
 
         if (method == null) {
             data = "404 not found";
@@ -37,17 +39,16 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         }
         else {
             method.setAccessible(true);
+
             Object controller = MappingRegistry.getMethodController(method);
-            // 构造Response对象，注入到客户视图函数中
-            HttpResponse resp = new HttpResponse();
-            List<Object> params = Arrays.asList(getHttpRequest(request), resp);
+            List<Object> params = getMethodParams(method, request);
             data = method.invoke(controller, params.toArray());
             status = resp.getStatus();
         }
 
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 status, Unpooled.copiedBuffer(String.valueOf(data), CharsetUtil.UTF_8));
-        response.headers().set("Content-Type", "application/json; charset=UTF-8");
+        response.headers().set("Content-Type", resp.getContentType());
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
@@ -58,6 +59,20 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         FullHttpResponse response = new DefaultFullHttpResponse(
                 HttpVersion.HTTP_1_1, HttpResponseStatus.OK);
         ctx.writeAndFlush(response);
+    }
+
+    private List<Object> getMethodParams(Method method, FullHttpRequest request) {
+        List<Object> result = new ArrayList<>();
+
+        Parameter[] parameters = method.getParameters();
+        for (Parameter param : parameters) {
+            if (param.getType() == HttpResponse.class) {
+                result.add(new HttpResponse());
+            } else if (param.getType() == HttpRequest.class) {
+                result.add(getHttpRequest(request));
+            }
+        }
+        return result;
     }
 
     private HttpRequest getHttpRequest(FullHttpRequest request) {

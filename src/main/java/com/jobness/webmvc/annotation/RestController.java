@@ -1,5 +1,7 @@
 package com.jobness.webmvc.annotation;
 
+import com.jobness.webmvc.enums.ContentType;
+
 import java.lang.annotation.*;
 
 /**
@@ -10,4 +12,9 @@ import java.lang.annotation.*;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RestController {
+
+    String value() default "";
+
+    ContentType contentType() default ContentType.JSON;
+
 }

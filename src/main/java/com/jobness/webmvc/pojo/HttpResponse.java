@@ -1,5 +1,6 @@
 package com.jobness.webmvc.pojo;
 
+import com.jobness.webmvc.enums.ContentType;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import lombok.Data;
 
@@ -12,9 +13,10 @@ public class HttpResponse {
 
     private HttpResponseStatus status;
 
-    private String contentType;
+    private ContentType contentType;
 
     public HttpResponse() {
         status = HttpResponseStatus.OK;
+        contentType = ContentType.JSON;
     }
 }

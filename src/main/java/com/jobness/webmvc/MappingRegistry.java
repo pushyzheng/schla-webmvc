@@ -22,7 +22,6 @@ public class MappingRegistry {
     public static void registerMapping(String url, Method method, Object controller) {
         urlMethodMapping.put(url, method);
         methodControllerMapping.put(method, controller);
-        System.out.println(urlMethodMapping);
     }
 
     public static Method getUrlMethod(String url) {

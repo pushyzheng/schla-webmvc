@@ -43,13 +43,10 @@ public class JobnessMVCApplication {
             RestController restController = c.getAnnotation(RestController.class);
             if (restController != null) {
                 StringBuilder url = new StringBuilder();
-                Method[] methods = c.getMethods();
-                if (c.isAnnotationPresent(RequestMapping.class)) {
-                    RequestMapping requestMapping = c.getAnnotation(RequestMapping.class);
-                    url.append(requestMapping.value());
-                }
+                url.append(restController.value());
                 // 遍历该Controller类所有带 @RequestMapping 注解的视图函数
                 // 并将 url -> 视图函数映射注册到视图中心类 MappingRegistry
+                Method[] methods = c.getMethods();
                 for (Method method : methods) {
                     if (method.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
