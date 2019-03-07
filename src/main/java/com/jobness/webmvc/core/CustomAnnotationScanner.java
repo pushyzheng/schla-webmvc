@@ -1,4 +1,4 @@
-package com.jobness.webmvc;
+package com.jobness.webmvc.core;
 
 import com.jobness.webmvc.annotation.RestController;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;

@@ -1,4 +1,4 @@
-package com.jobness.webmvc;
+package com.jobness.webmvc.core;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;

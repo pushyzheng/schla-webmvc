@@ -1,7 +1,7 @@
 package com.jobness.webmvc.netty;
 
 import com.alibaba.fastjson.JSON;
-import com.jobness.webmvc.MappingRegistry;
+import com.jobness.webmvc.core.MappingRegistry;
 import com.jobness.webmvc.annotation.QueryString;
 import com.jobness.webmvc.annotation.RequestBody;
 import com.jobness.webmvc.enums.ContentType;
