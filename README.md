@@ -9,3 +9,5 @@
 - 整合Mybatis
 
 - 集成webSocket
+
+- 封装Redis

@@ -11,6 +11,9 @@
     <properties>
         <spring.version>5.1.5.RELEASE</spring.version>
         <netty.version>4.1.33.Final</netty.version>
+        <mybatis-spring.version>2.0.0</mybatis-spring.version>
+        <mybatis.version>3.4.6</mybatis.version>
+        <druid.version>1.1.9</druid.version>
     </properties>
 
     <dependencies>
@@ -30,12 +33,41 @@
             <artifactId>spring-beans</artifactId>
             <version>${spring.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-jdbc</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-tx</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
 
         <!--Netty-->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>${netty.version}</version>
+        </dependency>
+
+        <!--mybatis-spring-->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>${mybatis-spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>${mybatis.version}</version>
+        </dependency>
+
+        <!--数据库连接池-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid</artifactId>
+            <version>${druid.version}</version>
         </dependency>
 
         <!-- 工具依赖 -->
