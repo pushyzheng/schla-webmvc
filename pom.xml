@@ -60,7 +60,10 @@
                 <configuration>
                     <source>1.8</source>
                     <target>1.8</target>
+                    <!--<parameters>true</parameters>-->
+                    <!--<testCompilerArgument>-parameters</testCompilerArgument>-->
                 </configuration>
+                <!--<version>3.7.0</version>-->
             </plugin>
         </plugins>
     </build>

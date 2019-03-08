@@ -1,5 +1,8 @@
 package com.jobness.webmvc.core;
 
+import com.jobness.webmvc.enums.RequestMethod;
+import io.netty.handler.codec.http.HttpMethod;
+
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
@@ -10,8 +13,10 @@ import java.util.Map;
  */
 public class MappingRegistry {
 
-    private static Map<String, Method> urlMethodMapping;
+    // 接口Uri -> (Http方法 -> 视图函数)
+    private static Map<String, Map<RequestMethod, Method>> urlMethodMapping;
 
+    // 视图函数 -> 函数的类
     private static Map<Method, Object> methodControllerMapping;
 
     static {
@@ -19,13 +24,21 @@ public class MappingRegistry {
         methodControllerMapping = new HashMap<>();
     }
 
-    public static void registerMapping(String url, Method method, Object controller) {
-        urlMethodMapping.put(url, method);
+    public static void registerMapping(String url, RequestMethod requestMethod,
+                                       Method method, Object controller) {
+        Map<RequestMethod, Method> map = urlMethodMapping.get(url);
+        if (map == null) {
+            map = new HashMap<>();
+        }
+        map.put(requestMethod, method);
+        urlMethodMapping.put(url, map);
         methodControllerMapping.put(method, controller);
     }
 
-    public static Method getUrlMethod(String url) {
-        return urlMethodMapping.get(url);
+    public static Method getUrlMethod(String url, HttpMethod httpMethod) {
+        Map<RequestMethod, Method> map = urlMethodMapping.get(url);
+        if (map == null) return null;
+        else return map.get(RequestMethod.convertHttpMethod(httpMethod));
     }
 
     public static Object getMethodController(Method method) {

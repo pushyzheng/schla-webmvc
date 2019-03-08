@@ -1,12 +1,15 @@
 package com.jobness.webmvc.netty;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONException;
 import com.jobness.webmvc.core.MappingRegistry;
 import com.jobness.webmvc.annotation.QueryString;
 import com.jobness.webmvc.annotation.RequestBody;
 import com.jobness.webmvc.enums.ContentType;
 import com.jobness.webmvc.enums.RequestMethod;
-import com.jobness.webmvc.exception.MissQueryStringException;
+import com.jobness.webmvc.exception.JSONParseErrorException;
+import com.jobness.webmvc.exception.MissingQueryStringException;
+import com.jobness.webmvc.exception.MissingRequestBodyException;
 import com.jobness.webmvc.pojo.HttpRequest;
 import com.jobness.webmvc.util.HttpUrlUtil;
 import com.jobness.webmvc.util.RespUtil;
@@ -37,7 +40,7 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
         }
 
         String uri = HttpUrlUtil.trimUri(request.uri());
-        Method method = MappingRegistry.getUrlMethod(uri);
+        Method method = MappingRegistry.getUrlMethod(uri, request.method());
         Object data;
         HttpResponseStatus status;
         // 构造Response对象，注入到客户视图函数中
@@ -90,20 +93,28 @@ public class HttpRequestHandler extends SimpleChannelInboundHandler<FullHttpRequ
             } else if (paramType == HttpRequest.class) {
                 result.add(getHttpRequest(request));
             }
-            // 当请求方法不为GET时，使用fastJSON解析表单内容，并转换成相应的实体类
-            if (!request.method().equals(HttpMethod.GET)) {
-                if (parameter.isAnnotationPresent(RequestBody.class)) {
+            // 当参数被@RequestBody注解时，使用fastJSON解析表单内容，并转换成相应的实体类
+            if (parameter.isAnnotationPresent(RequestBody.class)) {
+                if (body == null || body.isEmpty()) {
+                    throw new MissingRequestBodyException("Required request body is missing",
+                            HttpResponseStatus.BAD_REQUEST);
+                }
+                try {
                     Object object = JSON.parseObject(body, parameter.getType());
                     result.add(object);
+                } catch (JSONException e) {  // JSON解析异常
+                    throw new JSONParseErrorException("The request json body parse error：" + e.getMessage(),
+                            HttpResponseStatus.BAD_REQUEST);
                 }
             }
             if (parameter.isAnnotationPresent(QueryString.class)) {
                 QueryString queryString = parameter.getAnnotation(QueryString.class);
                 // java compiler 必须添加-parameters参数，否则获取到的参数名如 arg0 这样
+                // Todo 客户端如果不加该编译参数还是无法识别，需要进行修改
                 String value = queries.get(parameter.getName());
                 if (value == null && queryString.required()) {
                     String message = String.format("查询字符串参数值%s不能为空", parameter.getName());
-                    throw new MissQueryStringException(message, HttpResponseStatus.BAD_REQUEST);
+                    throw new MissingQueryStringException(message, HttpResponseStatus.BAD_REQUEST);
                 }
                 // 将 String 参数值value转换为视图函数参数的相应类型
                 if (value != null && (paramType == Integer.class || paramType == int.class)) {

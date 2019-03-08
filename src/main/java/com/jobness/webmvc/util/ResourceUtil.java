@@ -2,6 +2,8 @@ package com.jobness.webmvc.util;
 
 import com.jobness.webmvc.exception.ConfigPropertiesException;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -12,14 +14,18 @@ import java.util.Properties;
  */
 public class ResourceUtil {
 
-    public static Properties getProperties(String fileName) throws IOException, ConfigPropertiesException {
+    public static Properties getProperties(Class<?> primarySource, String fileName) throws IOException {
+
         Properties properties = new Properties();
-        InputStream inputStream = ResourceUtil.class.getResourceAsStream("/" + fileName);
-        if (inputStream == null) {
+        String path = primarySource.getClassLoader().getResource("").getPath();
+        InputStream inputStream;
+        try {
+            inputStream = new FileInputStream(path + "/" + fileName);
+            properties.load(inputStream);
+            return properties;
+        } catch (FileNotFoundException e) {
             throw new ConfigPropertiesException("The resource/jobness-webmvc.properties file cannot be found");
         }
-        properties.load(inputStream);
-        return properties;
     }
 
 }

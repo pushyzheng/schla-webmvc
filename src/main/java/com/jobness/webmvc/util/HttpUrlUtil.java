@@ -13,6 +13,9 @@ import java.util.Map;
  */
 public class HttpUrlUtil {
 
+    /**
+     * 修剪uri，去除查询字符串参数值部分
+     */
     public static String trimUri(String uri) {
         String[] arr = uri.split("\\?");
         if (arr.length != 0) {

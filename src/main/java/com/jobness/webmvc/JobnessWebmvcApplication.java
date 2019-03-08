@@ -1,11 +1,11 @@
-package com.jobness.webmvc.core;
+package com.jobness.webmvc;
 
 import com.jobness.webmvc.annotation.RequestMapping;
 import com.jobness.webmvc.annotation.RestController;
-import com.jobness.webmvc.exception.BaseException;
-import com.jobness.webmvc.exception.ConfigPropertiesException;
+import com.jobness.webmvc.core.CustomAnnotationScanner;
+import com.jobness.webmvc.core.MappingRegistry;
+import com.jobness.webmvc.handler.PropertiesConfigHandler;
 import com.jobness.webmvc.netty.HttpServer;
-import com.jobness.webmvc.util.ResourceUtil;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.support.GenericApplicationContext;
@@ -13,49 +13,37 @@ import org.springframework.context.support.GenericApplicationContext;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * @author Pushy
  * @since 2019/3/7 12:35
  */
-public class JobnessMVCApplication {
+public class JobnessWebmvcApplication {
 
-    private static final int DEFAULT_PORT = 8080;
-    private static final String DEFAULT_HOST = "127.0.0.1";
-
-    private static final String PROPERTIES_FILENAME = "jobness-webmvc.properties";
-    private static final String BASE_PACKAGE_KEY = "base-package";
-    private static final String SERVER_HOST_KEY = "server.host";
-    private static final String SERVER_PORT_KEY = "server.port";
-    private static final String SERVER_DEFAULT_PATH_KEY = "server.default-path";
-
-    public static void run() {
+    public static void run(Class<?> primarySource) {
+        System.out.println("\n" +
+                "   _____         _                               \n" +
+                "  (_____)       | |                              \n" +
+                "     _     ___  | | _   ____    ____   ___   ___ \n" +
+                "    | |   / _ \\ | || \\ |  _ \\  / _  ) /___) /___)\n" +
+                " ___| |  | |_| || |_) )| | | |( (/ / |___ ||___ |\n" +
+                "(____/    \\___/ |____/ |_| |_| \\____)(___/ (___/ \n" +
+                "                                                 \n");
+        System.out.println(":: Jobness webmvc ::");
         try {
-            Properties config = ResourceUtil.getProperties(PROPERTIES_FILENAME);
-            String basePackage = config.getProperty(BASE_PACKAGE_KEY);
-            if (basePackage == null) {
-                throw new BaseException("Missing necessary base-package property");
-            }
+            // 获取客户配置文件
+            PropertiesConfigHandler config = new PropertiesConfigHandler();
+            config.read(primarySource);
 
-            int port = DEFAULT_PORT;
-            if (config.getProperty(SERVER_PORT_KEY) != null) {
-                port = Integer.parseInt(config.getProperty(SERVER_PORT_KEY));
-            }
-            String host = config.getProperty(SERVER_HOST_KEY, DEFAULT_HOST);
-            String defaultPath = config.getProperty(SERVER_DEFAULT_PATH_KEY, "");
-
-            GenericApplicationContext context = new AnnotationConfigApplicationContext(basePackage);
+            GenericApplicationContext context = new AnnotationConfigApplicationContext(config.getBasePackage());
             // 创建 CustomAnnotationScanner 对象，通过Spring扫描自定义注解类
             CustomAnnotationScanner serviceScanner = new CustomAnnotationScanner(context);
             serviceScanner.registerTypeFilter(RestController.class);
-            serviceScanner.scan(basePackage);
+            serviceScanner.scan(config.getBasePackage());
 
             handlerMapping(context);
-            HttpServer.run(host, port);
+            HttpServer.run(config.getHost(), config.getPort());
 
-        } catch (ConfigPropertiesException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -78,7 +66,8 @@ public class JobnessMVCApplication {
                     if (method.isAnnotationPresent(RequestMapping.class)) {
                         RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
                         url.append(requestMapping.value());
-                        MappingRegistry.registerMapping(url.toString(), method, controller);
+                        MappingRegistry.registerMapping(url.toString(), requestMapping.method(),
+                                method, controller);
                         url = new StringBuilder().append(restController.value());
                     }
                 }
@@ -86,10 +75,6 @@ public class JobnessMVCApplication {
         }
 
         MappingRegistry.printUrlMethodMapping();
-    }
-
-    public static void main(String[] args) {
-        JobnessMVCApplication.run();
     }
 
 }
