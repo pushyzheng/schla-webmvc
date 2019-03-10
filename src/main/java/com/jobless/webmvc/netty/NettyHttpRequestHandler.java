@@ -3,6 +3,7 @@ package com.jobless.webmvc.netty;
 import com.jobless.webmvc.config.HandlerInterceptor;
 import com.jobless.webmvc.config.InterceptorRegistration;
 import com.jobless.webmvc.config.InterceptorRegistry;
+import com.jobless.webmvc.config.WebSocketHandlerRegistry;
 import com.jobless.webmvc.core.MappingRegistry;
 import com.jobless.webmvc.enums.ContentType;
 import com.jobless.webmvc.enums.RequestMethod;
@@ -35,15 +36,28 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
 
     private InterceptorRegistry interceptorRegistry;
 
+    private WebSocketHandlerRegistry webSocketRegistry;
+
     NettyHttpRequestHandler(ApplicationContext applicationContext) {
+        this(applicationContext, null);
+    }
+
+    NettyHttpRequestHandler(ApplicationContext applicationContext, WebSocketHandlerRegistry registry) {
         appContext = applicationContext;
         if (appContext.containsBean(InterceptorRegistry.class.getSimpleName())) {
             interceptorRegistry = appContext.getBean(InterceptorRegistry.class);
         }
+        this.webSocketRegistry = registry;
     }
 
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         this.context = ctx;
+        if (webSocketRegistry.getPath().equalsIgnoreCase(request.uri())) {
+            if (webSocketRegistry.isOpened()) {
+                ctx.fireChannelRead(request.retain());
+                return;
+            }
+        }
         if (HttpUtil.is100ContinueExpected(request)) {
             send100Continue();
         }

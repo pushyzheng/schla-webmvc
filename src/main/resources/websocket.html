@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <br>
+    <input id="text" type="text"/>
+    <button onclick="send()">Send Message</button>
+    <hr/>
+    <button onclick="closeWebSocket()">Close the webSocket connection</button>
+    <hr/>
+    <div id="message"></div>
+</body>
+
+<script type="text/javascript">
+    let connUrl = 'ws://localhost/ws';
+    let websocket = null;
+
+    // determine whether the browser supports webSocket
+    if ('WebSocket' in window) {
+        websocket = new WebSocket(connUrl);
+    }
+    else {
+        alert("The browser is't supported by webSocket")
+    }
+
+    // fail to connect server callback method
+    websocket.onerror = function () {
+        setMessageInnerHTML("WebSocket connection error \n");
+    };
+
+    // established connection callback method
+    websocket.onopen = function () {
+        setMessageInnerHTML("WebSocket connection succeeded \n");
+    };
+
+    // received message callback method
+    websocket.onmessage = function (event) {
+        console.log("received：" + event.data);
+        setMessageInnerHTML("received：" + event.data);
+    };
+
+    // connection closed callback method
+    websocket.onclose = function () {
+        setMessageInnerHTML("WebSocket connection is closed");
+    };
+
+    window.onbeforeunload = function () {
+        closeWebSocket();
+    };
+
+    // show message on page
+    function setMessageInnerHTML(sendMessage) {
+        document.getElementById('message').innerHTML += sendMessage + '<br/>';
+    }
+
+    // close webSocket connection
+    function closeWebSocket() {
+        websocket.close();
+    }
+
+    // send message
+    function send() {
+        let message = document.getElementById('text').value;
+        let now = getNowFormatDate();
+        document.getElementById('message').innerHTML += (now + '<br/>'  + message) + '<br/>';
+        document.getElementById('message').style.color = "red";
+        websocket.send(message);
+    }
+
+    // get current datetime
+    function getNowFormatDate() {
+        let date = new Date();
+        let seperator1 = "-";
+        let seperator2 = ":";
+        let month = date.getMonth() + 1;
+        let strDate = date.getDate();
+        if (month >= 1 && month <= 9) {
+            month = "0" + month;
+        }
+        if (strDate >= 0 && strDate <= 9) {
+            strDate = "0" + strDate;
+        }
+        let currentDate = date.getFullYear() + seperator1 + month + seperator1 + strDate
+            + " " + date.getHours() + seperator2 + date.getMinutes()
+            + seperator2 + date.getSeconds();
+        return currentDate;
+    }
+</script>
+</html>

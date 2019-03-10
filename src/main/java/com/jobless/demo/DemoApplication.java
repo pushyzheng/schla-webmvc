@@ -1,6 +1,6 @@
 package com.jobless.demo;
 
-import com.jobless.webmvc.JobnessWebmvcApplication;
+import com.jobless.webmvc.JoblessWebmvcApplication;
 
 /**
  * @author Pushy
@@ -8,6 +8,6 @@ import com.jobless.webmvc.JobnessWebmvcApplication;
  */
 public class DemoApplication {
     public static void main(String[] args) {
-        JobnessWebmvcApplication.run(DemoApplication.class);
+        JoblessWebmvcApplication.run(DemoApplication.class);
     }
 }

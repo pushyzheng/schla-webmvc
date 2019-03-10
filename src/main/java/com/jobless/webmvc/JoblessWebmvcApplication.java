@@ -5,6 +5,8 @@ import com.jobless.webmvc.autoconfig.MybatisAutoConfiguration;
 import com.jobless.webmvc.autoconfig.AutoConfigRegistry;
 import com.jobless.webmvc.config.InterceptorRegistry;
 import com.jobless.webmvc.config.JobnessMvcConfigurer;
+import com.jobless.webmvc.config.WebSocketConfigurer;
+import com.jobless.webmvc.config.WebSocketHandlerRegistry;
 import com.jobless.webmvc.core.CustomAnnotationScanner;
 import com.jobless.webmvc.autoconfig.PropertiesConfigReader;
 import com.jobless.webmvc.handler.MappingHandler;
@@ -20,7 +22,7 @@ import java.io.IOException;
  * @author Pushy
  * @since 2019/3/7 12:35
  */
-public class JobnessWebmvcApplication {
+public class JoblessWebmvcApplication {
 
     public static void run(Class<?> primarySource) {
         printBanner();
@@ -42,17 +44,31 @@ public class JobnessWebmvcApplication {
             serviceScanner.scan(config.getBasePackage());
 
             registerInterceptor(context);
+            WebSocketHandlerRegistry webSocketRegistry = registerWebSocket(context);
 
             MappingHandler mappingHandler = new MappingHandler(context);
             mappingHandler.doHandle();
 
             HttpServer.setAppContext(context);
+            HttpServer.setWebSocketRegistry(webSocketRegistry);
             // 启动Netty HTTP服务器
             HttpServer.run(config.getHost(), config.getPort());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static WebSocketHandlerRegistry registerWebSocket(GenericApplicationContext context) {
+        WebSocketHandlerRegistry registry = null;
+        try {
+            WebSocketConfigurer configurer = context.getBean(WebSocketConfigurer.class);
+            registry = new WebSocketHandlerRegistry();
+            configurer.registerWebSocketHandlers(registry);
+        } catch (NoSuchBeanDefinitionException e) {
+            System.out.println("No configure webSocket");
+        }
+        return registry;
     }
 
     private static void registerInterceptor(GenericApplicationContext context) {

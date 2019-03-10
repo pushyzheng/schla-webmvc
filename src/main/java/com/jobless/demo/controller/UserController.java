@@ -16,9 +16,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 @RestController("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
-
     @RequestMapping("")
     public String index(HttpRequest request, HttpResponse response) {
         return RespUtil.success(request.getUri() + " => " + request.getMethod());
@@ -30,7 +27,7 @@ public class UserController {
     }
 
     @RequestMapping("/get")
-    public int getUserById(@QueryString(required = true) int id) {
+    public int getUserById(@QueryString int id) {
         return id;
     }
 

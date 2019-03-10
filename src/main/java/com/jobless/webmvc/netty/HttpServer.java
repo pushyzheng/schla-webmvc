@@ -1,5 +1,6 @@
 package com.jobless.webmvc.netty;
 
+import com.jobless.webmvc.config.WebSocketHandlerRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
@@ -15,6 +16,8 @@ public class HttpServer {
 
     private static ApplicationContext appContext;
 
+    private static WebSocketHandlerRegistry webSocketRegistry;
+
     private static void start(final String host, final int port) {
         NioEventLoopGroup worker = new NioEventLoopGroup();
 
@@ -22,7 +25,7 @@ public class HttpServer {
             ServerBootstrap b = new ServerBootstrap();
             b.group(worker)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new JobnessChannelInitializer(appContext));
+                    .childHandler(new JobnessChannelInitializer(appContext, webSocketRegistry));
             ChannelFuture f = b.bind(host, port).sync();
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
@@ -43,6 +46,10 @@ public class HttpServer {
 
     public static void setAppContext(ApplicationContext applicationContext) {
         appContext = applicationContext;
+    }
+
+    public static void setWebSocketRegistry(WebSocketHandlerRegistry registry) {
+        webSocketRegistry = registry;
     }
 
     public static void run(String host, int port) {
