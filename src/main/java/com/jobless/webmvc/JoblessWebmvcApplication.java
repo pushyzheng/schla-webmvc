@@ -11,6 +11,8 @@ import com.jobless.webmvc.core.CustomAnnotationScanner;
 import com.jobless.webmvc.autoconfig.PropertiesConfigReader;
 import com.jobless.webmvc.handler.MappingHandler;
 import com.jobless.webmvc.netty.HttpServer;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -23,6 +25,8 @@ import java.io.IOException;
  * @since 2019/3/7 12:35
  */
 public class JoblessWebmvcApplication {
+
+    private static Logger logger = LogManager.getLogger(JoblessWebmvcApplication.class);
 
     public static void run(Class<?> primarySource) {
         printBanner();
@@ -66,7 +70,7 @@ public class JoblessWebmvcApplication {
             registry = new WebSocketHandlerRegistry();
             configurer.registerWebSocketHandlers(registry);
         } catch (NoSuchBeanDefinitionException e) {
-            System.out.println("No configure webSocket");
+            logger.debug("No configure webSocket");
         }
         return registry;
     }
@@ -86,7 +90,7 @@ public class JoblessWebmvcApplication {
             System.out.println(interceptorRegistry.getRegistrations());
 
         } catch (NoSuchBeanDefinitionException e) {
-            System.out.println("No configure interceptors");
+            logger.debug("No configure interceptors");
         }
     }
 

@@ -32,9 +32,9 @@ public class JobnessChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast(new HttpObjectAggregator(512 * 1024));    // 聚合HTTP消息
         pipeline.addLast(new ChunkedWriteHandler());                               // 写文件
         pipeline.addLast(new NettyHttpRequestHandler(appContext, webSocketRegistry));
-        if (webSocketRegistry.isOpened()) {
+        if (webSocketRegistry != null && webSocketRegistry.isAvailable()) {
             pipeline.addLast(new WebSocketServerProtocolHandler(webSocketRegistry.getPath()));
+            pipeline.addLast(new TextWebSocketFrameHandler(webSocketRegistry));
         }
-        pipeline.addLast(new TextWebSocketFrameHandler(webSocketRegistry));
     }
 }

@@ -23,7 +23,7 @@ public class WebSocketHandlerRegistry {
         return path;
     }
 
-    public boolean isOpened() {
+    public boolean isAvailable() {
         return path != null && !path.isEmpty();
     }
 

@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * @author Pushy
  * @since 2019/3/10 19:33
  */
-@Configuration
+//@Configuration
 public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override

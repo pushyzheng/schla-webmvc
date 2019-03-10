@@ -6,6 +6,8 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -13,6 +15,8 @@ import org.springframework.context.ApplicationContext;
  * @since 2019/3/7 12:40
  */
 public class HttpServer {
+
+    private static Logger logger = LogManager.getLogger(HttpServer.class);
 
     private static ApplicationContext appContext;
 
@@ -30,9 +34,9 @@ public class HttpServer {
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
-                        System.out.println("Running on http://" + host + ":" + port);
+                        logger.info("Running on http://" + host + ":" + port);
                     } else {
-                        System.out.println("Failed to run the application");
+                        logger.error("Failed to run the application");
                     }
                 }
             });

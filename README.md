@@ -6,8 +6,8 @@
 
 - 整合Mybatis  √
 
-- 拦截器/过滤器
+- 拦截器/过滤器 √
 
-- 集成webSocket
+- 集成webSocket √
 
 - 封装Redis

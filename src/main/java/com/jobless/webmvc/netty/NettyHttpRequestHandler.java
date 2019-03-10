@@ -52,8 +52,8 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
 
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         this.context = ctx;
-        if (webSocketRegistry.getPath().equalsIgnoreCase(request.uri())) {
-            if (webSocketRegistry.isOpened()) {
+        if (webSocketRegistry != null && webSocketRegistry.getPath().equalsIgnoreCase(request.uri())) {
+            if (webSocketRegistry.isAvailable()) {
                 ctx.fireChannelRead(request.retain());
                 return;
             }
