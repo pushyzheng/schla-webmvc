@@ -30,7 +30,7 @@ public enum RequestMethod {
     }
 
     /**
-     * 将Netty的HttpMethod对象转换为该枚举类
+     * 将Netty内置的HttpMethod对象转换为该枚举类
      */
     public static RequestMethod convertHttpMethod(HttpMethod httpMethod) {
         if (httpMethod.equals(HttpMethod.GET)) {

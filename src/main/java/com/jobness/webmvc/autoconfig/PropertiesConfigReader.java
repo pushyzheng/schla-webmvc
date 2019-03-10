@@ -23,7 +23,7 @@ public class PropertiesConfigReader {
     private static final String DATASOURCE_URL = "datasource.url";
     private static final String DATASOURCE_USERNAME = "datasource.name";
     private static final String DATASOURCE_PASSWORD = "datasource.password";
-    private static final String MAPPER_PACKAGE = "mybatis.mapper.package";
+    private static final String MAPPER_PACKAGE = "mybatis.dao.package";
     private static final String MAPPER_LOCATION = "mybatis.mapper.location";
 
     private int port;
@@ -59,7 +59,7 @@ public class PropertiesConfigReader {
         datasourcePassword = config.getProperty(DATASOURCE_PASSWORD);
 
         mapperPackage = config.getProperty(MAPPER_PACKAGE, basePackage);
-        mapperLocation = config.getProperty(MAPPER_LOCATION, "classpath:mapper/*.xml");
+        mapperLocation = config.getProperty(MAPPER_LOCATION, "classpath:dao/*.xml");
     }
 
     public int getPort() {

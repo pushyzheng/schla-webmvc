@@ -4,9 +4,9 @@
 
 - Spring容器管理  √
 
-- 拦截器/过滤器
+- 整合Mybatis  √
 
-- 整合Mybatis
+- 拦截器/过滤器
 
 - 集成webSocket
 

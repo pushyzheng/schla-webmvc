@@ -7,6 +7,7 @@ import com.jobness.webmvc.autoconfig.AutoConfigRegistry;
 import com.jobness.webmvc.core.CustomAnnotationScanner;
 import com.jobness.webmvc.core.MappingRegistry;
 import com.jobness.webmvc.autoconfig.PropertiesConfigReader;
+import com.jobness.webmvc.handler.MappingHandler;
 import com.jobness.webmvc.netty.HttpServer;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -41,40 +42,15 @@ public class JobnessWebmvcApplication {
             serviceScanner.registerTypeFilter(RestController.class);
             serviceScanner.scan(config.getBasePackage());
 
-            handlerMapping(context);
+            MappingHandler mappingHandler = new MappingHandler(context);
+            mappingHandler.doHandleMapping();
+
+            // 启动Netty HTTP服务器
             HttpServer.run(config.getHost(), config.getPort());
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-    }
-
-    private static void handlerMapping(ApplicationContext context) {
-        Map<String, Object> controllers = context.getBeansWithAnnotation(RestController.class);
-
-        for (Map.Entry<String, Object> entry : controllers.entrySet()) {
-            Object controller = entry.getValue();
-            Class<?> c = controller.getClass();
-            RestController restController = c.getAnnotation(RestController.class);
-            if (restController != null) {
-                StringBuilder url = new StringBuilder();
-                url.append(restController.value());
-                // 遍历该Controller类所有带 @RequestMapping 注解的视图函数
-                // 并将 url -> 视图函数映射注册到视图中心类 MappingRegistry
-                Method[] methods = c.getMethods();
-                for (Method method : methods) {
-                    if (method.isAnnotationPresent(RequestMapping.class)) {
-                        RequestMapping requestMapping = method.getAnnotation(RequestMapping.class);
-                        url.append(requestMapping.value());
-                        MappingRegistry.registerMapping(url.toString(), requestMapping.method(),
-                                method, controller);
-                        url = new StringBuilder().append(restController.value());
-                    }
-                }
-            }
-        }
-
-        MappingRegistry.printUrlMethodMapping();
     }
 
     private static void printBanner() {

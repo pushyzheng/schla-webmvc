@@ -2,10 +2,7 @@ package com.jobness.demo.controller;
 
 import com.jobness.demo.pojo.UserDTO;
 import com.jobness.demo.service.UserService;
-import com.jobness.webmvc.annotation.QueryString;
-import com.jobness.webmvc.annotation.RequestBody;
-import com.jobness.webmvc.annotation.RequestMapping;
-import com.jobness.webmvc.annotation.RestController;
+import com.jobness.webmvc.annotation.*;
 import com.jobness.webmvc.enums.RequestMethod;
 import com.jobness.webmvc.pojo.HttpRequest;
 import com.jobness.webmvc.pojo.HttpResponse;
@@ -25,6 +22,11 @@ public class UserController {
     @RequestMapping("")
     public String index(HttpRequest request, HttpResponse response) {
         return RespUtil.success(request.getUri() + " => " + request.getMethod());
+    }
+
+    @RequestMapping("/{id}")
+    public String fetchUserById(@PathVariable String id) {
+        return id;
     }
 
     @RequestMapping("/get")

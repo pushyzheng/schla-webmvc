@@ -18,6 +18,6 @@ public class JobnessChannelInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast(new HttpServerCodec());                                   // HTTP解编码器
         pipeline.addLast(new HttpObjectAggregator(512 * 1024));    // 聚合HTTP消息
         pipeline.addLast(new ChunkedWriteHandler());                               // 写文件
-        pipeline.addLast(new HttpRequestHandler());
+        pipeline.addLast(new NettyHttpRequestHandler());
     }
 }

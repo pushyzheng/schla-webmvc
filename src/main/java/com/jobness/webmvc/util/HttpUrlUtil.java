@@ -1,10 +1,6 @@
 package com.jobness.webmvc.util;
 
-import com.jobness.webmvc.pojo.QueryParam;
-
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,8 +34,16 @@ public class HttpUrlUtil {
         return result;
     }
 
+    public static void parsePathVariable(String integralUri) {
+        String uri = trimUri(integralUri);
+
+    }
+
+
+
     public static void main(String[] args) {
-        parseQueryString("https://localhost/users?name=Pushy");
+//        parseQueryString("https://localhost/users?name=Pushy");
+        parsePathVariable("/users/2");
     }
 
 }

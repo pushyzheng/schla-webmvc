@@ -26,7 +26,7 @@ public class HttpServer {
                     if (future.isSuccess()) {
                         System.out.println("Running on http://" + host + ":" + port);
                     } else {
-                        System.out.println("绑定失败!!!");
+                        System.out.println("Failed to run the application");
                     }
                 }
             });

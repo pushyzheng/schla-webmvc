@@ -1,6 +1,5 @@
 package com.jobness.webmvc.core;
 
-import com.jobness.webmvc.annotation.RestController;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
