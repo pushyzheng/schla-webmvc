@@ -6,6 +6,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.HttpObjectAggregator;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.stream.ChunkedWriteHandler;
+import org.springframework.context.ApplicationContext;
 
 /**
  * @author Pushy
@@ -13,11 +14,17 @@ import io.netty.handler.stream.ChunkedWriteHandler;
  */
 public class JobnessChannelInitializer extends ChannelInitializer<SocketChannel> {
 
+    private ApplicationContext appContext;
+
+    JobnessChannelInitializer(ApplicationContext appContext) {
+        this.appContext = appContext;
+    }
+
     protected void initChannel(SocketChannel ch) throws Exception {
         ChannelPipeline pipeline = ch.pipeline();
         pipeline.addLast(new HttpServerCodec());                                   // HTTP解编码器
         pipeline.addLast(new HttpObjectAggregator(512 * 1024));    // 聚合HTTP消息
         pipeline.addLast(new ChunkedWriteHandler());                               // 写文件
-        pipeline.addLast(new NettyHttpRequestHandler());
+        pipeline.addLast(new NettyHttpRequestHandler(appContext));
     }
 }

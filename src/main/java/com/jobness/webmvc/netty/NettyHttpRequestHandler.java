@@ -1,8 +1,13 @@
 package com.jobness.webmvc.netty;
 
+import com.jobness.webmvc.config.HandlerInterceptor;
+import com.jobness.webmvc.config.InterceptorRegistration;
+import com.jobness.webmvc.config.InterceptorRegistry;
 import com.jobness.webmvc.core.MappingRegistry;
 import com.jobness.webmvc.enums.ContentType;
+import com.jobness.webmvc.enums.RequestMethod;
 import com.jobness.webmvc.handler.HandleMethodArgumentResolver;
+import com.jobness.webmvc.pojo.HttpRequest;
 import com.jobness.webmvc.util.HttpUrlUtil;
 import com.jobness.webmvc.util.RespUtil;
 import io.netty.buffer.Unpooled;
@@ -12,6 +17,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import com.jobness.webmvc.pojo.HttpResponse;
 import io.netty.util.CharsetUtil;
+import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.Method;
 import java.util.Date;
@@ -25,41 +31,90 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
 
     private ChannelHandlerContext context;
 
+    private ApplicationContext appContext;
+
+    private InterceptorRegistry interceptorRegistry;
+
+    NettyHttpRequestHandler(ApplicationContext applicationContext) {
+        appContext = applicationContext;
+        if (appContext.containsBean(InterceptorRegistry.class.getSimpleName())) {
+            interceptorRegistry = appContext.getBean(InterceptorRegistry.class);
+        }
+    }
+
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         this.context = ctx;
         if (HttpUtil.is100ContinueExpected(request)) {
             send100Continue();
         }
+        processRequest(request);
+    }
 
+    private void processRequest(FullHttpRequest request) throws Exception {
         String uri = HttpUrlUtil.trimUri(request.uri());
         Method method = MappingRegistry.getUrlMethod(uri, request.method());
         Object data;
         // 构造Response对象，注入到客户视图函数中
-        final HttpResponse response = new HttpResponse();
+        final HttpResponse httpResponse = new HttpResponse();
+        final HttpRequest httpRequest = convertHttpRequest(request);
 
-        if (method == null) {
-            data = RespUtil.error(HttpResponseStatus.NOT_FOUND, HttpResponseStatus.NOT_FOUND.reasonPhrase());
+        boolean interceptResult = processInterceptor(httpRequest, httpResponse);
+        if (!interceptResult) {
+            data = "拦截失败";
         }
         else {
-            data = invokeViewMethod(method, request, response);
+            if (method == null) {
+                httpResponse.setStatus(HttpResponseStatus.NOT_FOUND);
+                data = RespUtil.error(HttpResponseStatus.NOT_FOUND,
+                        HttpResponseStatus.NOT_FOUND.reasonPhrase());
+            }
+            else {
+                data = invokeViewMethod(method, request, httpRequest, httpResponse);
+            }
         }
-
         // 生成Response对象并冲刷返回到客户端
-        FullHttpResponse fullResponse = generateFullHttpResponse(data, response);
-        context.writeAndFlush(fullResponse).addListener(ChannelFutureListener.CLOSE);
+        FullHttpResponse response = generateFullHttpResponse(data, httpResponse);
+        context.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+    }
+
+    /**
+     * 执行用户配置的拦截器
+     */
+    private boolean processInterceptor(HttpRequest request, HttpResponse response) throws Exception {
+        String uri = HttpUrlUtil.trimUri(request.getUri());
+        if (interceptorRegistry != null) {
+            List<InterceptorRegistration> registrations = interceptorRegistry.getRegistrations();
+            for (InterceptorRegistration registration : registrations) {
+                List<String> includePatterns = registration.getIncludePatterns();
+                List<String> excludePatterns = registration.getExcludePatterns();
+                // Todo 优化拦截规则算法
+                if (includePatterns.contains("/**")) {
+                    if (excludePatterns.contains(uri)) {
+                        return true;
+                    }
+                }
+                else if (!includePatterns.contains(uri)) {
+                    return true;
+                }
+                HandlerInterceptor interceptor = registration.getInterceptor();
+                boolean result = interceptor.preHandle(request, response);
+                if (!result) return false;
+            }
+        }
+        return true;
     }
 
     /**
      * 调用视图函数，获取函数的返回值
      */
     private Object invokeViewMethod(Method method, FullHttpRequest request,
-                                    HttpResponse resp) throws Exception {
+                                    HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         method.setAccessible(true);
-        HandleMethodArgumentResolver resolver = new HandleMethodArgumentResolver(request, method, resp);
-        resolver.doHandle();
+        HandleMethodArgumentResolver resolver =
+                new HandleMethodArgumentResolver(method, request, httpRequest, httpResponse);
+        List<Object> params = resolver.resolveParams();
 
         Object controller = MappingRegistry.getMethodController(method);
-        List<Object> params = resolver.getParams();
         System.out.println("view method params => " + params);
         return method.invoke(controller, params.toArray());
     }
@@ -71,6 +126,21 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
         response.headers().set("Date", new Date());
         response.headers().set("Server", "jobness-webmvc/0.0.1");
         return response;
+    }
+
+    /**
+     * 获取jobness-webmvc封装的HttpRequest对象
+     * 因为不能将Netty内置的 FullHttpRequest 暴露给客户使用
+     */
+    private HttpRequest convertHttpRequest(FullHttpRequest request) {
+        HttpRequest result = new HttpRequest();
+        RequestMethod requestMethod = RequestMethod.convertHttpMethod(request.method());
+
+        result.setMethod(requestMethod);
+        result.setUri(request.uri());
+        result.setVersion(request.protocolVersion().toString());
+        result.setHeaders(request.headers());
+        return result;
     }
 
     /**

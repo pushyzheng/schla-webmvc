@@ -1,21 +1,20 @@
 package com.jobness.webmvc;
 
-import com.jobness.webmvc.annotation.RequestMapping;
 import com.jobness.webmvc.annotation.RestController;
 import com.jobness.webmvc.autoconfig.MybatisAutoConfiguration;
 import com.jobness.webmvc.autoconfig.AutoConfigRegistry;
+import com.jobness.webmvc.config.InterceptorRegistry;
+import com.jobness.webmvc.config.JobnessMvcConfigurer;
 import com.jobness.webmvc.core.CustomAnnotationScanner;
-import com.jobness.webmvc.core.MappingRegistry;
 import com.jobness.webmvc.autoconfig.PropertiesConfigReader;
 import com.jobness.webmvc.handler.MappingHandler;
 import com.jobness.webmvc.netty.HttpServer;
-import org.springframework.context.ApplicationContext;
+import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.core.env.Environment;
+import org.springframework.context.support.GenericApplicationContext;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.Map;
 
 /**
  * @author Pushy
@@ -42,14 +41,36 @@ public class JobnessWebmvcApplication {
             serviceScanner.registerTypeFilter(RestController.class);
             serviceScanner.scan(config.getBasePackage());
 
-            MappingHandler mappingHandler = new MappingHandler(context);
-            mappingHandler.doHandleMapping();
+            registerInterceptor(context);
 
+            MappingHandler mappingHandler = new MappingHandler(context);
+            mappingHandler.doHandle();
+
+            HttpServer.setAppContext(context);
             // 启动Netty HTTP服务器
             HttpServer.run(config.getHost(), config.getPort());
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private static void registerInterceptor(GenericApplicationContext context) {
+        try {
+            // 获取客户的JobnessMvcConfigurer配置类
+            JobnessMvcConfigurer webmvcConfigurer = context.getBean(JobnessMvcConfigurer.class);
+            // 手动注册 InterceptorRegistry Bean
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(InterceptorRegistry.class);
+            context.registerBeanDefinition(InterceptorRegistry.class.getSimpleName(),
+                    builder.getBeanDefinition());
+            // 调用客户配置类的addInterceptors，配置拦截器
+            InterceptorRegistry interceptorRegistry = context.getBean(InterceptorRegistry.class);
+            webmvcConfigurer.addInterceptors(interceptorRegistry);
+
+            System.out.println(interceptorRegistry.getRegistrations());
+
+        } catch (NoSuchBeanDefinitionException e) {
+            System.out.println("No configure interceptors");
         }
     }
 

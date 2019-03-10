@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONException;
 import com.jobness.webmvc.annotation.PathVariable;
 import com.jobness.webmvc.annotation.QueryString;
 import com.jobness.webmvc.annotation.RequestBody;
-import com.jobness.webmvc.enums.RequestMethod;
 import com.jobness.webmvc.exception.JSONParseErrorException;
 import com.jobness.webmvc.exception.MissingQueryStringException;
 import com.jobness.webmvc.exception.MissingRequestBodyException;
@@ -37,20 +36,25 @@ public class HandleMethodArgumentResolver {
     // 视图函数反射Method对象
     private Method method;
 
-    // 注入给客户项目的Response对象（如果需要的话）
-    private HttpResponse resp;
+    // 注入给客户项目的Request对象（如果需要的话）
+    private HttpRequest httpRequest;
 
-    public HandleMethodArgumentResolver(FullHttpRequest request, Method method, HttpResponse resp) {
+    // 注入给客户项目的Response对象（如果需要的话）
+    private HttpResponse httpResponse;
+
+    public HandleMethodArgumentResolver(Method method, FullHttpRequest request,
+                                        HttpRequest httpRequest, HttpResponse httpResponse) {
         this.request = request;
         this.method = method;
-        this.resp = resp;
+        this.httpRequest = httpRequest;
+        this.httpResponse = httpResponse;
     }
 
     public List<Object> getParams() {
         return params;
     }
 
-    public void doHandle() {
+    public List<Object> resolveParams() {
         // 获取到POST/DELETE/PUT 提交的body内容数据
         String body = request.content().toString(CharsetUtil.UTF_8);
         // 解析出请求的URL查询字符串参数和值
@@ -60,10 +64,10 @@ public class HandleMethodArgumentResolver {
         for (Parameter parameter : parameters) {
             Class<?> paramType = parameter.getType();
             if (paramType == HttpResponse.class) {
-                params.add(resp);
+                params.add(httpResponse);
             }
             else if (paramType == HttpRequest.class) {
-                params.add(getHttpRequest(request));
+                params.add(httpRequest);
             }
             // 当参数被@RequestBody注解时，使用fastJSON解析表单内容，并转换成相应的实体类
             else if (parameter.isAnnotationPresent(RequestBody.class)) {
@@ -78,6 +82,7 @@ public class HandleMethodArgumentResolver {
                 processPathVariable(parameter, request.uri());
             }
         }
+        return params;
     }
 
     private void processRequestBody(Parameter parameter, String body) {
@@ -123,21 +128,6 @@ public class HandleMethodArgumentResolver {
 
     private void processPathVariable(Parameter parameter, String uri) {
 
-    }
-
-    /**
-     * 获取jobness-webmvc封装的HttpRequest对象
-     * 因为不能将Netty内置的 FullHttpRequest 暴露给客户使用
-     */
-    private HttpRequest getHttpRequest(FullHttpRequest request) {
-        HttpRequest result = new HttpRequest();
-        RequestMethod requestMethod = RequestMethod.convertHttpMethod(request.method());
-
-        result.setMethod(requestMethod);
-        result.setUri(request.uri());
-        result.setVersion(request.protocolVersion().toString());
-        result.setHeaders(request.headers());
-        return result;
     }
 
 }

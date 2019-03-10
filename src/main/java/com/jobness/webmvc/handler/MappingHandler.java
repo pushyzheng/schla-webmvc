@@ -20,7 +20,7 @@ public class MappingHandler {
         this.context = context;
     }
 
-    public void doHandleMapping() {
+    public void doHandle() {
         handlerRestController();
     }
 
