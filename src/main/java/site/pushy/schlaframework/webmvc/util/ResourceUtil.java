@@ -24,7 +24,7 @@ public class ResourceUtil {
             properties.load(inputStream);
             return properties;
         } catch (FileNotFoundException e) {
-            throw new ConfigPropertiesException("The resource/schlaframework-webmvc.properties file cannot be found");
+            throw new ConfigPropertiesException("The resource/schla-webmvc.properties file cannot be found");
         }
     }
 

@@ -71,6 +71,13 @@
             <version>${druid.version}</version>
         </dependency>
 
+        <!--Redis java 连接客户端-->
+        <dependency>
+            <groupId>redis.clients</groupId>
+            <artifactId>jedis</artifactId>
+            <version>2.9.0</version>
+        </dependency>
+
         <!--日志模块依赖-->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

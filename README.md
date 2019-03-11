@@ -1,13 +1,19 @@
 # schla-webmvc
 
-## Todo
+## What's that
 
-- Spring容器管理  √
+`schla-web MVC` is a web MVC framework, which can inject service and component to controller automatically.
 
-- 整合Mybatis  √
+The obvious merit is `schla-web MVC` is based on Netty that is an asynchronous event-driven network application framework.
 
-- 拦截器/过滤器 √
+## Quick Start
 
-- 集成webSocket √
+The HelloWorld sample is very easy. The same to SpringBoot, you just call the `run ` method of SchlaWebmvcApplication class then you can start an HTTP application.
 
-- 封装Redis
+```java
+public class DemoApplication {
+    public static void main(String[] args) {
+        SchlaWebmvcApplication.run(DemoApplication.class);
+    }
+}
+```
