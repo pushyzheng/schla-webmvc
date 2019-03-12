@@ -29,7 +29,7 @@ public class HttpServer {
             ServerBootstrap b = new ServerBootstrap();
             b.group(worker)
                     .channel(NioServerSocketChannel.class)
-                    .childHandler(new JobnessChannelInitializer(appContext, webSocketRegistry));
+                    .childHandler(new SchlaChannelInitializer(appContext, webSocketRegistry));
             ChannelFuture f = b.bind(host, port).sync();
             f.addListener(new ChannelFutureListener() {
                 public void operationComplete(ChannelFuture future) throws Exception {

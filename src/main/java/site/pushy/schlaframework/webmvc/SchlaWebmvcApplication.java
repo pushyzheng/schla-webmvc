@@ -1,10 +1,11 @@
 package site.pushy.schlaframework.webmvc;
 
+import site.pushy.schlaframework.webmvc.annotation.Controller;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.autoconfig.MybatisAutoConfiguration;
 import site.pushy.schlaframework.webmvc.autoconfig.AutoConfigRegistry;
 import site.pushy.schlaframework.webmvc.config.InterceptorRegistry;
-import site.pushy.schlaframework.webmvc.config.JobnessMvcConfigurer;
+import site.pushy.schlaframework.webmvc.config.SchlaMvcConfigurer;
 import site.pushy.schlaframework.webmvc.config.WebSocketConfigurer;
 import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
 import site.pushy.schlaframework.webmvc.core.CustomAnnotationScanner;
@@ -19,6 +20,9 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.context.support.GenericApplicationContext;
 
 import java.io.IOException;
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author Pushy
@@ -42,9 +46,11 @@ public class SchlaWebmvcApplication {
             context.scan(config.getBasePackage());
             context.refresh();
 
+            List<Class<? extends Annotation>> customAnnotation =
+                    Arrays.asList(Controller.class, RestController.class);
             // 创建 CustomAnnotationScanner 对象，通过Spring扫描自定义注解类
             CustomAnnotationScanner serviceScanner = new CustomAnnotationScanner(context);
-            serviceScanner.registerTypeFilter(RestController.class);
+            serviceScanner.registerTypeFilter(customAnnotation);
             serviceScanner.scan(config.getBasePackage());
 
             registerInterceptor(context);
@@ -78,7 +84,7 @@ public class SchlaWebmvcApplication {
     private static void registerInterceptor(GenericApplicationContext context) {
         try {
             // 获取客户的JobnessMvcConfigurer配置类
-            JobnessMvcConfigurer webmvcConfigurer = context.getBean(JobnessMvcConfigurer.class);
+            SchlaMvcConfigurer webmvcConfigurer = context.getBean(SchlaMvcConfigurer.class);
             // 手动注册 InterceptorRegistry Bean
             BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(InterceptorRegistry.class);
             context.registerBeanDefinition(InterceptorRegistry.class.getSimpleName(),
@@ -103,7 +109,7 @@ public class SchlaWebmvcApplication {
                 " _____) )( (___ | | | || | / ___ |\n" +
                 "(______/  \\____)|_| |_| \\_)\\_____|\n" +
                 "                                  \n");
-        System.out.println(":: schla-framework webmvc ::");
+        System.out.println(":: schla-framework webmvc ::         powered by Pushy see https://pushy.site");
     }
 
 }

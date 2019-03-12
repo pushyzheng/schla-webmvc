@@ -8,14 +8,15 @@ import site.pushy.schlaframework.webmvc.core.MappingRegistry;
 import site.pushy.schlaframework.webmvc.enums.ContentType;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 import site.pushy.schlaframework.webmvc.handler.HandleMethodArgumentResolver;
+import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.util.HttpUrlUtil;
 import site.pushy.schlaframework.webmvc.util.RespUtil;
+import site.pushy.schlaframework.webmvc.pojo.HttpResponse;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
-import site.pushy.schlaframework.webmvc.pojo.HttpResponse;
 import io.netty.util.CharsetUtil;
 import org.springframework.context.ApplicationContext;
 
@@ -66,10 +67,11 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
     private void processRequest(FullHttpRequest request) throws Exception {
         String uri = HttpUrlUtil.trimUri(request.uri());
         Method method = MappingRegistry.getUrlMethod(uri, request.method());
+        Object controller = MappingRegistry.getMethodController(method);
         Object data;
         // 构造Response对象，注入到客户视图函数中
-        final HttpResponse httpResponse = new HttpResponse();
-        final site.pushy.schlaframework.webmvc.pojo.HttpRequest httpRequest = convertHttpRequest(request);
+        final HttpResponse httpResponse = new HttpResponse(controller);
+        final HttpRequest httpRequest = convertHttpRequest(request);
 
         boolean interceptResult = processInterceptor(httpRequest, httpResponse);
         if (!interceptResult) {
@@ -145,8 +147,8 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
      * 获取jobness-webmvc封装的HttpRequest对象
      * 因为不能将Netty内置的 FullHttpRequest 暴露给客户使用
      */
-    private site.pushy.schlaframework.webmvc.pojo.HttpRequest convertHttpRequest(FullHttpRequest request) {
-        site.pushy.schlaframework.webmvc.pojo.HttpRequest result = new site.pushy.schlaframework.webmvc.pojo.HttpRequest();
+    private HttpRequest convertHttpRequest(FullHttpRequest request) {
+        HttpRequest result = new HttpRequest();
         RequestMethod requestMethod = RequestMethod.convertHttpMethod(request.method());
 
         result.setMethod(requestMethod);

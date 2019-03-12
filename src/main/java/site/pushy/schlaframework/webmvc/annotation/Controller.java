@@ -6,12 +6,12 @@ import java.lang.annotation.*;
 
 /**
  * @author Pushy
- * @since 2019/3/12 19:04
+ * @since 2019/3/7 12:54
  */
 @Documented
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface RestController {
+public @interface Controller {
 
     String value() default "";
 

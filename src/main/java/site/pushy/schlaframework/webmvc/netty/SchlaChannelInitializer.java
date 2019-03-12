@@ -14,13 +14,13 @@ import org.springframework.context.ApplicationContext;
  * @author Pushy
  * @since 2019/3/7 12:38
  */
-public class JobnessChannelInitializer extends ChannelInitializer<SocketChannel> {
+public class SchlaChannelInitializer extends ChannelInitializer<SocketChannel> {
 
     private ApplicationContext appContext;
 
     private WebSocketHandlerRegistry webSocketRegistry;
 
-    JobnessChannelInitializer(ApplicationContext appContext, WebSocketHandlerRegistry registry) {
+    SchlaChannelInitializer(ApplicationContext appContext, WebSocketHandlerRegistry registry) {
         this.appContext = appContext;
         this.webSocketRegistry = registry;
     }

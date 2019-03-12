@@ -9,11 +9,11 @@ import java.lang.annotation.*;
  * @since 2019/3/7 16:43
  */
 @Documented
-@Target({ElementType.METHOD})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RequestMapping {
 
-    String value();
+    String value() default "";
 
     RequestMethod method() default RequestMethod.GET;
 

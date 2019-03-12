@@ -6,7 +6,7 @@ package site.pushy.schlaframework.webmvc.config;
  * @author Pushy
  * @since 2019/3/10 10:51
  */
-public interface JobnessMvcConfigurer {
+public interface SchlaMvcConfigurer {
 
     default void addInterceptors(InterceptorRegistry registry) {
     }

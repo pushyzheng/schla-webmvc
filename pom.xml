@@ -6,7 +6,7 @@
 
     <groupId>site.pushy</groupId>
     <artifactId>schla-webmvc</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.1-SNAPSHOT</version>
 
     <properties>
         <spring.version>5.1.5.RELEASE</spring.version>
@@ -18,7 +18,7 @@
     </properties>
 
     <dependencies>
-        <!--spring 家族依赖-->
+        <!-- Spring framework libraries -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -45,14 +45,14 @@
             <version>${spring.version}</version>
         </dependency>
 
-        <!--Netty-->
+        <!-- Netty -->
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>${netty.version}</version>
         </dependency>
 
-        <!--mybatis-spring-->
+        <!-- mybatis-spring -->
         <dependency>
             <groupId>org.mybatis</groupId>
             <artifactId>mybatis-spring</artifactId>
@@ -64,21 +64,21 @@
             <version>${mybatis.version}</version>
         </dependency>
 
-        <!--数据库连接池-->
+        <!-- Alibaba connection pool -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid</artifactId>
             <version>${druid.version}</version>
         </dependency>
 
-        <!--Redis java 连接客户端-->
+        <!-- Redis java connection client -->
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
             <version>2.9.0</version>
         </dependency>
 
-        <!--日志模块依赖-->
+        <!-- log4j logging module -->
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -90,7 +90,7 @@
             <version>${log4j.version}</version>
         </dependency>
 
-        <!-- 工具依赖 -->
+        <!-- some tools -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>fastjson</artifactId>

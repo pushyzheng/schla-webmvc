@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.pojo.UserDTO;
 import site.pushy.schlaframework.webmvc.annotation.*;
+import site.pushy.schlaframework.webmvc.annotation.mapping.GET;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.pojo.HttpResponse;
@@ -11,10 +12,10 @@ import site.pushy.schlaframework.webmvc.util.RespUtil;
  * @author Pushy
  * @since 2019/3/7 12:55
  */
-@RestController("/users")
+@Controller("/users")
 public class UserController {
 
-    @RequestMapping("")
+    @GET("")
     public String index(HttpRequest request, HttpResponse response) {
         return RespUtil.success(request.getUri() + " => " + request.getMethod());
     }

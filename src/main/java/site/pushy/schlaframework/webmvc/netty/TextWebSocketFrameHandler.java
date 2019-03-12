@@ -33,7 +33,9 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
             ctx.pipeline().remove(NettyHttpRequestHandler.class);
 
             processConnectionEstablished(ctx);
-            webSocketHandler.afterConnectionEstablished(getSession(ctx.channel()));
+            if (getSession(ctx.channel()) != null) {
+                webSocketHandler.afterConnectionEstablished(getSession(ctx.channel()));
+            }
         } else {
             super.userEventTriggered(ctx, evt);
         }
@@ -41,12 +43,16 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
-        webSocketHandler.processMessage(getSession(ctx.channel()), msg.text());
+        if (getSession(ctx.channel()) != null) {
+            webSocketHandler.processMessage(getSession(ctx.channel()), msg.text());
+        }
     }
 
     @Override
     public void channelUnregistered(ChannelHandlerContext ctx) throws Exception {
-        webSocketHandler.afterConnectionCloses(getSession(ctx.channel()));
+        if (getSession(ctx.channel()) != null) {
+            webSocketHandler.afterConnectionCloses(getSession(ctx.channel()));
+        }
     }
 
     private void processConnectionEstablished(ChannelHandlerContext ctx) {
