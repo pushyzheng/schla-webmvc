@@ -1,5 +1,6 @@
 package site.pushy.schlaframework.webmvc.netty;
 
+import com.alibaba.fastjson.JSON;
 import site.pushy.schlaframework.webmvc.config.HandlerInterceptor;
 import site.pushy.schlaframework.webmvc.config.InterceptorRegistration;
 import site.pushy.schlaframework.webmvc.config.InterceptorRegistry;
@@ -135,11 +136,16 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
     }
 
     private FullHttpResponse generateFullHttpResponse(Object data, HttpResponse resp) {
+        String body;
+        if (data.getClass() != String.class)
+            body = JSON.toJSONString(data);
+        else
+            body = String.valueOf(data);
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
-                resp.getStatus(), Unpooled.copiedBuffer(String.valueOf(data), CharsetUtil.UTF_8));
+                resp.getStatus(), Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
         response.headers().set("Content-Type", resp.getContentType().value());
         response.headers().set("Date", new Date());
-        response.headers().set("Server", "example-webmvc/0.0.1");
+        response.headers().set("Server", "schla-webmvc/0.0.1");
         return response;
     }
 

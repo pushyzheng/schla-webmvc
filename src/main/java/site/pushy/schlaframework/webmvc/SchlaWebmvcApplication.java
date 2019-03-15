@@ -1,12 +1,5 @@
 package site.pushy.schlaframework.webmvc;
 
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientOptions;
-import com.mongodb.ServerAddress;
-import com.mongodb.client.MongoDatabase;
-import eu.dozd.mongo.MongoMapper;
-import org.bson.codecs.configuration.CodecRegistries;
-import org.bson.codecs.configuration.CodecRegistry;
 import site.pushy.schlaframework.webmvc.annotation.Controller;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.autoconfig.MybatisAutoConfiguration;
@@ -18,6 +11,7 @@ import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
 import site.pushy.schlaframework.webmvc.core.CustomAnnotationScanner;
 import site.pushy.schlaframework.webmvc.autoconfig.PropertiesConfigReader;
 import site.pushy.schlaframework.webmvc.core.MongoComponent;
+import site.pushy.schlaframework.webmvc.core.RedisComponent;
 import site.pushy.schlaframework.webmvc.handler.MappingHandler;
 import site.pushy.schlaframework.webmvc.netty.HttpServer;
 import org.apache.logging.log4j.LogManager;
@@ -25,7 +19,6 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.support.GenericApplicationContext;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -40,6 +33,8 @@ public class SchlaWebmvcApplication {
 
     private static Logger logger = LogManager.getLogger(SchlaWebmvcApplication.class);
 
+    private static AnnotationConfigApplicationContext context;
+
     private static PropertiesConfigReader config;
 
     public static void run(Class<?> primarySource) {
@@ -51,7 +46,7 @@ public class SchlaWebmvcApplication {
             config.read(primarySource);
             AutoConfigRegistry.setReader(config);
 
-            AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+            context = new AnnotationConfigApplicationContext();
             context.register(MybatisAutoConfiguration.class);
             context.scan(config.getBasePackage());
             context.refresh();
@@ -63,9 +58,11 @@ public class SchlaWebmvcApplication {
             serviceScanner.registerTypeFilter(customAnnotation);
             serviceScanner.scan(config.getBasePackage());
 
-            registerMongoMapper(context);
-            registerInterceptor(context);
-            WebSocketHandlerRegistry webSocketRegistry = registerWebSocket(context);
+            registerMongoMapper();
+            registerInterceptor();
+            registerRedisComponent();
+            registerInterceptor();
+            WebSocketHandlerRegistry webSocketRegistry = registerWebSocket();
 
             MappingHandler mappingHandler = new MappingHandler(context);
             mappingHandler.doHandle();
@@ -80,14 +77,7 @@ public class SchlaWebmvcApplication {
         }
     }
 
-    private static void registerMongoMapper(GenericApplicationContext context) {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
-        builder.addConstructorArgValue(config.getMongoDatabaseName());
-        context.registerBeanDefinition(MongoComponent.class.getSimpleName(),
-                builder.getBeanDefinition());
-    }
-
-    private static WebSocketHandlerRegistry registerWebSocket(GenericApplicationContext context) {
+    private static WebSocketHandlerRegistry registerWebSocket() {
         WebSocketHandlerRegistry registry = null;
         try {
             WebSocketConfigurer configurer = context.getBean(WebSocketConfigurer.class);
@@ -99,7 +89,7 @@ public class SchlaWebmvcApplication {
         return registry;
     }
 
-    private static void registerInterceptor(GenericApplicationContext context) {
+    private static void registerInterceptor() {
         try {
             // 获取客户的JobnessMvcConfigurer配置类
             SchlaMvcConfigurer webmvcConfigurer = context.getBean(SchlaMvcConfigurer.class);
@@ -116,6 +106,19 @@ public class SchlaWebmvcApplication {
         } catch (NoSuchBeanDefinitionException e) {
             logger.debug("No configure interceptors");
         }
+    }
+
+    private static void registerMongoMapper() {
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
+        builder.addConstructorArgValue(config.getMongoDatabaseName());
+        context.registerBeanDefinition(MongoComponent.class.getSimpleName(),
+                builder.getBeanDefinition());
+    }
+
+    private static void registerRedisComponent() {
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(RedisComponent.class);
+        context.registerBeanDefinition(RedisComponent.class.getSimpleName(),
+                builder.getBeanDefinition());
     }
 
     private static void printBanner() {

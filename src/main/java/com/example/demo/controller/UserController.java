@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import site.pushy.schlaframework.webmvc.annotation.*;
 import site.pushy.schlaframework.webmvc.annotation.mapping.GET;
 import site.pushy.schlaframework.webmvc.core.MongoComponent;
+import com.example.demo.pojo.User;
+import site.pushy.schlaframework.webmvc.core.RedisComponent;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.pojo.HttpResponse;
@@ -26,6 +28,9 @@ public class UserController {
     @Autowired
     private MongoComponent mongoComponent;
 
+    @Autowired
+    private RedisComponent redisComponent;
+
     @RequestMapping("/all")
     public String index(HttpRequest request, HttpResponse response) {
         MongoCollection<Person> collection = mongoComponent.getDB().getCollection("persons", Person.class);
@@ -43,8 +48,11 @@ public class UserController {
     }
 
     @RequestMapping("/get")
-    public int getUserById(@QueryString int id) {
-        return id;
+    public User getUserById() {
+        User user = new User();
+        user.setId(1);
+        user.setName(redisComponent.get("username"));
+        return user;
     }
 
     @RequestMapping(value = "/add", method = RequestMethod.POST)
