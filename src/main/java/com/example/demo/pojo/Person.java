@@ -3,6 +3,7 @@ package com.example.demo.pojo;
 import eu.dozd.mongo.annotation.Entity;
 import eu.dozd.mongo.annotation.Id;
 import lombok.Data;
+import site.pushy.schlaframework.webmvc.annotation.MongoDocument;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  */
 @Entity
 @Data
+@MongoDocument("person")
 public class Person {
 
     @Id

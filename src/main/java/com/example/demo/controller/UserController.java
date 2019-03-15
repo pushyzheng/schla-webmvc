@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.pojo.Person;
+import com.example.demo.pojo.Post;
 import com.example.demo.pojo.UserDTO;
 import com.mongodb.client.MongoCollection;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +34,17 @@ public class UserController {
 
     @RequestMapping("/all")
     public String index(HttpRequest request, HttpResponse response) {
-        MongoCollection<Person> collection = mongoComponent.getDB().getCollection("persons", Person.class);
-        List<Person> res = new ArrayList<>();
-        Iterator<Person> iterator = collection.find(Person.class).iterator();
-        while (iterator.hasNext()) {
-            res.add(iterator.next());
-        }
-        return RespUtil.success(res);
+        Person person = new Person();
+        person.setName("Tom");
+        person.setAge(34);
+        mongoComponent.insertOne(person, Person.class);
+
+        Person pushyzheng = mongoComponent.findOneByKey("name", "pushyzheng", Person.class);
+        System.out.println(pushyzheng);
+
+        mongoComponent.deleteByKey("name", "pushyzheng", Person.class);
+
+        return RespUtil.success(mongoComponent.findAll(Person.class));
     }
 
     @RequestMapping("/{id}")
