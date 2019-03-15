@@ -64,6 +64,18 @@
             <version>${mybatis.version}</version>
         </dependency>
 
+        <!--mongo-java-driver and mongo-mapper library-->
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>3.10.1</version>
+        </dependency>
+        <dependency>
+            <groupId>eu.dozd</groupId>
+            <artifactId>mongo-mapper</artifactId>
+            <version>1.0.10</version>
+        </dependency>
+
         <!-- Alibaba connection pool -->
         <dependency>
             <groupId>com.alibaba</groupId>

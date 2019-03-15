@@ -1,5 +1,12 @@
 package site.pushy.schlaframework.webmvc;
 
+import com.mongodb.MongoClient;
+import com.mongodb.MongoClientOptions;
+import com.mongodb.ServerAddress;
+import com.mongodb.client.MongoDatabase;
+import eu.dozd.mongo.MongoMapper;
+import org.bson.codecs.configuration.CodecRegistries;
+import org.bson.codecs.configuration.CodecRegistry;
 import site.pushy.schlaframework.webmvc.annotation.Controller;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.autoconfig.MybatisAutoConfiguration;
@@ -10,6 +17,7 @@ import site.pushy.schlaframework.webmvc.config.WebSocketConfigurer;
 import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
 import site.pushy.schlaframework.webmvc.core.CustomAnnotationScanner;
 import site.pushy.schlaframework.webmvc.autoconfig.PropertiesConfigReader;
+import site.pushy.schlaframework.webmvc.core.MongoComponent;
 import site.pushy.schlaframework.webmvc.handler.MappingHandler;
 import site.pushy.schlaframework.webmvc.netty.HttpServer;
 import org.apache.logging.log4j.LogManager;
@@ -32,12 +40,14 @@ public class SchlaWebmvcApplication {
 
     private static Logger logger = LogManager.getLogger(SchlaWebmvcApplication.class);
 
+    private static PropertiesConfigReader config;
+
     public static void run(Class<?> primarySource) {
         printBanner();
 
         try {
             // 获取客户配置文件
-            PropertiesConfigReader config = new PropertiesConfigReader();
+            config = new PropertiesConfigReader();
             config.read(primarySource);
             AutoConfigRegistry.setReader(config);
 
@@ -53,6 +63,7 @@ public class SchlaWebmvcApplication {
             serviceScanner.registerTypeFilter(customAnnotation);
             serviceScanner.scan(config.getBasePackage());
 
+            registerMongoMapper(context);
             registerInterceptor(context);
             WebSocketHandlerRegistry webSocketRegistry = registerWebSocket(context);
 
@@ -67,6 +78,13 @@ public class SchlaWebmvcApplication {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void registerMongoMapper(GenericApplicationContext context) {
+        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
+        builder.addConstructorArgValue(config.getMongoDatabaseName());
+        context.registerBeanDefinition(MongoComponent.class.getSimpleName(),
+                builder.getBeanDefinition());
     }
 
     private static WebSocketHandlerRegistry registerWebSocket(GenericApplicationContext context) {

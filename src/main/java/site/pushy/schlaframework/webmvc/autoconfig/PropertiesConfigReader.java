@@ -26,6 +26,8 @@ public class PropertiesConfigReader {
     private static final String MAPPER_PACKAGE = "mybatis.dao.package";
     private static final String MAPPER_LOCATION = "mybatis.mapper.location";
 
+    private static final String MONGO_DATABASE_NAME = "mongo.database.name";
+
     private int port;
     private String host;
     private String defaultPath;
@@ -37,6 +39,8 @@ public class PropertiesConfigReader {
 
     private String mapperPackage;
     private String mapperLocation;
+
+    private String mongoDatabaseName;
 
     public void read(Class<?> primarySource) throws IOException {
         Properties config = ResourceUtil.getProperties(primarySource, PROPERTIES_FILENAME);
@@ -60,6 +64,8 @@ public class PropertiesConfigReader {
 
         mapperPackage = config.getProperty(MAPPER_PACKAGE, basePackage);
         mapperLocation = config.getProperty(MAPPER_LOCATION, "classpath:dao/*.xml");
+
+        mongoDatabaseName = config.getProperty(MONGO_DATABASE_NAME);
     }
 
     public int getPort() {
@@ -96,5 +102,9 @@ public class PropertiesConfigReader {
 
     public String getMapperLocation() {
         return mapperLocation;
+    }
+
+    public String getMongoDatabaseName() {
+        return mongoDatabaseName;
     }
 }
