@@ -13,14 +13,8 @@ import java.lang.annotation.*;
 @Documented
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@RequestMapping(
-        method = RequestMethod.GET
-)
 public @interface GET {
 
-    @AliasFor(
-            annotation = RequestMapping.class
-    )
     String value() default "";
 
 }

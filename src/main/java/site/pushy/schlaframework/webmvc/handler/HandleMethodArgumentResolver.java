@@ -2,10 +2,13 @@ package site.pushy.schlaframework.webmvc.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
+import com.alibaba.fastjson.JSONObject;
+import site.pushy.schlaframework.webmvc.annotation.FieldRequired;
 import site.pushy.schlaframework.webmvc.annotation.PathVariable;
 import site.pushy.schlaframework.webmvc.annotation.QueryString;
 import site.pushy.schlaframework.webmvc.annotation.RequestBody;
 import site.pushy.schlaframework.webmvc.exception.JSONParseErrorException;
+import site.pushy.schlaframework.webmvc.exception.MissingBodyFieldException;
 import site.pushy.schlaframework.webmvc.exception.MissingQueryStringException;
 import site.pushy.schlaframework.webmvc.exception.MissingRequestBodyException;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
@@ -15,9 +18,11 @@ import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.CharsetUtil;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -86,12 +91,20 @@ public class HandleMethodArgumentResolver {
     }
 
     private void processRequestBody(Parameter parameter, String body) {
-        // Todo 对@FieldRequired注解功能的实现
         if (body == null || body.isEmpty()) {
             throw new MissingRequestBodyException("Required request body is missing",
                     HttpResponseStatus.BAD_REQUEST);
         }
         try {
+            JSONObject jsonObject = JSON.parseObject(body);
+            for (Field field : parameter.getType().getDeclaredFields()) {
+                if (field.isAnnotationPresent(FieldRequired.class)) {
+                    if (jsonObject.get(field.getName()) == null) {
+                        String message = String.format("Required field %s is not present", field.getName());
+                        throw new MissingBodyFieldException(message, HttpResponseStatus.BAD_REQUEST);
+                    }
+                }
+            }
             Object object = JSON.parseObject(body, parameter.getType());
             params.add(object);
         } catch (JSONException e) {  // JSON解析异常

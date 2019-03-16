@@ -57,11 +57,11 @@ public class PostRestController {
 
 ## Features
 
-- Asynchronous HTTP request；
-
-- Auto-configure `Spring `with `mybatis`；
-- Supporting `webSocket` protocol；
-- Depend on Spring
+- Asynchronous HTTP request;
+- Auto-configure `Spring `with `mybatis`;
+- Supports `webSocket` protocol;
+- Depends on Spring;
+- Contains Redis & Mongo component.
 
 ## contact me
 

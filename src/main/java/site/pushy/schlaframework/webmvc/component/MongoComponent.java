@@ -1,13 +1,11 @@
-package site.pushy.schlaframework.webmvc.core;
+package site.pushy.schlaframework.webmvc.component;
 
-import com.mongodb.BasicDBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import eu.dozd.mongo.MongoMapper;
@@ -29,8 +27,6 @@ public class MongoComponent {
 
     private static final String ID = "_id";
 
-    private ThreadLocal<MongoClient> local;
-
     private MongoClientOptions settings;
 
     private String databaseName;
@@ -39,13 +35,14 @@ public class MongoComponent {
 
     private int port = 27017;
 
+    private MongoClient client;
+
     public MongoComponent() {
         this(null);
     }
 
     public MongoComponent(String name) {
         this.databaseName = name;
-        local = new ThreadLocal<>();
         initMethod();
     }
 
@@ -55,24 +52,15 @@ public class MongoComponent {
         }
         CodecRegistry codecRegistry = CodecRegistries.fromProviders(MongoMapper.getProviders());
         settings = MongoClientOptions.builder().codecRegistry(codecRegistry).build();
+        client = new MongoClient(new ServerAddress(host, port), settings);
     }
 
     private MongoDatabase getDB() {
-        if (local.get() == null) {
-            MongoClient client = new MongoClient(new ServerAddress(host, port), settings);
-            local.set(client);
-            return client.getDatabase(databaseName);
-        }
-        MongoClient client = local.get();
         return client.getDatabase(databaseName);
     }
 
     private void closeConn() {
-        if (local.get() != null) {
-            MongoClient client = local.get();
-            client.close();
-            local.remove();
-        }
+        client.close();
     }
 
     private <T> MongoCollection<T> getCollection(Class<T> clazz) {
@@ -88,13 +76,11 @@ public class MongoComponent {
     public <T> void insertOne(T record, Class<T> clazz) {
         MongoCollection<T> collection = getCollection(clazz);
         collection.insertOne(record);
-        closeConn();
     }
 
     public <T> void insertMany(List<T> records, Class<T> clazz) {
         MongoCollection<T> collection = getCollection(clazz);
         collection.insertMany(records);
-        closeConn();
     }
 
     public <T> List<T> findAll(Class<T> clazz) {
@@ -105,7 +91,6 @@ public class MongoComponent {
         while (iterator.hasNext()) {
             res.add(iterator.next());
         }
-        closeConn();
         return res;
     }
 
@@ -115,9 +100,7 @@ public class MongoComponent {
 
     public <T> T findOneByKey(String key, String value, Class<T> clazz) {
         MongoCollection<T> collection = getCollection(clazz);
-        T res = collection.find(Filters.eq(key, value)).first();
-        closeConn();
-        return res;
+        return collection.find(Filters.eq(key, value)).first();
     }
 
     public <T> List<T> findManyById(String id, Class<T> clazz) {
@@ -132,7 +115,6 @@ public class MongoComponent {
         while (iterator.hasNext()) {
             res.add(iterator.next());
         }
-        closeConn();
         return res;
     }
 
@@ -144,7 +126,6 @@ public class MongoComponent {
                                            T record, Class<T> clazz) {
         MongoCollection<T> collection = getCollection(clazz);
         UpdateResult res = null;
-        closeConn();
         return res;
     }
 
@@ -154,9 +135,7 @@ public class MongoComponent {
 
     public <T> DeleteResult deleteByKey(String key, String value, Class<T> clazz) {
         MongoCollection<T> collection = getCollection(clazz);
-        DeleteResult result = collection.deleteOne(Filters.eq(key, value));
-        closeConn();
-        return result;
+        return collection.deleteOne(Filters.eq(key, value));
     }
 
 }

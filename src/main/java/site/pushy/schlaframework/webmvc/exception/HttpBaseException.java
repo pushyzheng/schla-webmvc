@@ -15,4 +15,7 @@ public class HttpBaseException extends BaseException {
         this.status = status;
     }
 
+    public HttpResponseStatus getStatus() {
+        return status;
+    }
 }

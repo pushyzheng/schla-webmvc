@@ -8,6 +8,8 @@ import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
 import site.pushy.schlaframework.webmvc.core.MappingRegistry;
 import site.pushy.schlaframework.webmvc.enums.ContentType;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
+import site.pushy.schlaframework.webmvc.exception.BaseException;
+import site.pushy.schlaframework.webmvc.exception.HttpBaseException;
 import site.pushy.schlaframework.webmvc.handler.HandleMethodArgumentResolver;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.util.HttpUrlUtil;
@@ -85,7 +87,19 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
                         HttpResponseStatus.NOT_FOUND.reasonPhrase());
             }
             else {
-                data = invokeViewMethod(method, request, httpRequest, httpResponse);
+                try {
+                    data = invokeViewMethod(method, request, httpRequest, httpResponse);
+                } catch (Exception e) {
+                    if (e instanceof HttpBaseException) {
+                        HttpBaseException httpBaseException = (HttpBaseException) e;
+                        data = RespUtil.error(httpBaseException.getStatus(), httpBaseException.getMessage());
+                        httpResponse.setStatus(httpBaseException.getStatus());
+                    }
+                    else {
+                        data = RespUtil.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+                        httpResponse.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+                    }
+                }
             }
         }
         // 生成Response对象并冲刷返回到客户端

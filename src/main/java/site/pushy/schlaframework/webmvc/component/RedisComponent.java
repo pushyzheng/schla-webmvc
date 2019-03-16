@@ -1,4 +1,4 @@
-package site.pushy.schlaframework.webmvc.core;
+package site.pushy.schlaframework.webmvc.component;
 
 import redis.clients.jedis.BinaryClient;
 import redis.clients.jedis.Jedis;

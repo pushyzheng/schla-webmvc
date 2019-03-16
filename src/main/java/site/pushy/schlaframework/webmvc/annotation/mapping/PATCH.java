@@ -7,9 +7,10 @@ import java.lang.annotation.*;
  * @since 2019/3/7 16:41
  */
 @Documented
-@Target(ElementType.TYPE)
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PATCH {
 
+    String value() default "";
 
 }
