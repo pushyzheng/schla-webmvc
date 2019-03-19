@@ -49,6 +49,8 @@ public class SchlaWebmvcApplication {
             context = new AnnotationConfigApplicationContext();
             context.register(MybatisAutoConfiguration.class);
             context.scan(config.getBasePackage());
+            registerMongoComponent();
+            registerRedisComponent();
             context.refresh();
 
             List<Class<? extends Annotation>> customAnnotation =
@@ -58,9 +60,6 @@ public class SchlaWebmvcApplication {
             serviceScanner.registerTypeFilter(customAnnotation);
             serviceScanner.scan(config.getBasePackage());
 
-            registerMongoMapper();
-            registerInterceptor();
-            registerRedisComponent();
             registerInterceptor();
             WebSocketHandlerRegistry webSocketRegistry = registerWebSocket();
 
@@ -100,15 +99,12 @@ public class SchlaWebmvcApplication {
             // 调用客户配置类的addInterceptors，配置拦截器
             InterceptorRegistry interceptorRegistry = context.getBean(InterceptorRegistry.class);
             webmvcConfigurer.addInterceptors(interceptorRegistry);
-
-            System.out.println(interceptorRegistry.getRegistrations());
-
         } catch (NoSuchBeanDefinitionException e) {
             logger.debug("No configure interceptors");
         }
     }
 
-    private static void registerMongoMapper() {
+    private static void registerMongoComponent() {
         BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
         builder.addConstructorArgValue(config.getMongoDatabaseName());
         context.registerBeanDefinition(MongoComponent.class.getSimpleName(),

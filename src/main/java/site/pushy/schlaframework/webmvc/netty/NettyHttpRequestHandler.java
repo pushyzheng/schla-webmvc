@@ -1,6 +1,9 @@
 package site.pushy.schlaframework.webmvc.netty;
 
 import com.alibaba.fastjson.JSON;
+import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import site.pushy.schlaframework.webmvc.config.HandlerInterceptor;
 import site.pushy.schlaframework.webmvc.config.InterceptorRegistration;
 import site.pushy.schlaframework.webmvc.config.InterceptorRegistry;
@@ -11,6 +14,7 @@ import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 import site.pushy.schlaframework.webmvc.exception.BaseException;
 import site.pushy.schlaframework.webmvc.exception.HttpBaseException;
 import site.pushy.schlaframework.webmvc.handler.HandleMethodArgumentResolver;
+import site.pushy.schlaframework.webmvc.handler.SessionHandler;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.util.HttpUrlUtil;
 import site.pushy.schlaframework.webmvc.util.RespUtil;
@@ -23,6 +27,7 @@ import io.netty.handler.codec.http.*;
 import io.netty.util.CharsetUtil;
 import org.springframework.context.ApplicationContext;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Date;
 import java.util.List;
@@ -40,6 +45,8 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
     private InterceptorRegistry interceptorRegistry;
 
     private WebSocketHandlerRegistry webSocketRegistry;
+
+    private static Logger logger = LogManager.getLogger(NettyHttpRequestHandler.class);
 
     NettyHttpRequestHandler(ApplicationContext applicationContext) {
         this(applicationContext, null);
@@ -76,54 +83,62 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
         final HttpResponse httpResponse = new HttpResponse(controller);
         final HttpRequest httpRequest = convertHttpRequest(request);
 
-        boolean interceptResult = processInterceptor(httpRequest, httpResponse);
-        if (!interceptResult) {
-            data = "拦截失败";
-        }
-        else {
-            if (method == null) {
-                httpResponse.setStatus(HttpResponseStatus.NOT_FOUND);
-                data = RespUtil.error(HttpResponseStatus.NOT_FOUND,
-                        HttpResponseStatus.NOT_FOUND.reasonPhrase());
+        SessionHandler sessionHandler = new SessionHandler(request, httpRequest);
+        String sessionId = sessionHandler.doHandle();
+
+        try {
+            if (!processInterceptor(httpRequest, httpResponse)) {
+                data = "";
             }
             else {
-                try {
+                if (method == null) {
+                    httpResponse.setStatus(HttpResponseStatus.NOT_FOUND);
+                    data = RespUtil.error(HttpResponseStatus.NOT_FOUND,
+                            HttpResponseStatus.NOT_FOUND.reasonPhrase());
+                }
+                else {
                     data = invokeViewMethod(method, request, httpRequest, httpResponse);
-                } catch (Exception e) {
-                    if (e instanceof HttpBaseException) {
-                        HttpBaseException httpBaseException = (HttpBaseException) e;
-                        data = RespUtil.error(httpBaseException.getStatus(), httpBaseException.getMessage());
-                        httpResponse.setStatus(httpBaseException.getStatus());
-                    }
-                    else {
-                        data = RespUtil.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
-                        httpResponse.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
-                    }
                 }
             }
+        } catch (HttpBaseException e) {
+            data = RespUtil.error(e.getStatus(), e.getMessage());
+            httpResponse.setStatus(e.getStatus());
+        } catch (InvocationTargetException invocationException) {
+            Throwable t = invocationException.getTargetException();
+            if (t instanceof HttpBaseException) {
+                HttpBaseException e = (HttpBaseException) t;
+                data = RespUtil.error(e.getStatus(), e.getMessage());
+                httpResponse.setStatus(e.getStatus());
+            } else {
+                t.printStackTrace();
+                data = RespUtil.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, t.getMessage());
+                httpResponse.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            data = RespUtil.error(HttpResponseStatus.INTERNAL_SERVER_ERROR, e.getMessage());
+            httpResponse.setStatus(HttpResponseStatus.INTERNAL_SERVER_ERROR);
         }
         // 生成Response对象并冲刷返回到客户端
-        FullHttpResponse response = generateFullHttpResponse(data, httpResponse);
+        FullHttpResponse response = generateFullHttpResponse(data, httpResponse, sessionId);
         context.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
      * 执行用户配置的拦截器
      */
-    private boolean processInterceptor(site.pushy.schlaframework.webmvc.pojo.HttpRequest request, HttpResponse response) throws Exception {
+    private boolean processInterceptor(HttpRequest request, HttpResponse response) throws Exception {
         String uri = HttpUrlUtil.trimUri(request.getUri());
         if (interceptorRegistry != null) {
             List<InterceptorRegistration> registrations = interceptorRegistry.getRegistrations();
             for (InterceptorRegistration registration : registrations) {
                 List<String> includePatterns = registration.getIncludePatterns();
                 List<String> excludePatterns = registration.getExcludePatterns();
-                // Todo 优化拦截规则算法
                 if (includePatterns.contains("/**")) {
                     if (excludePatterns.contains(uri)) {
                         return true;
                     }
-                }
-                else if (!includePatterns.contains(uri)) {
+                } else if (!includePatterns.contains(uri)) {
                     return true;
                 }
                 HandlerInterceptor interceptor = registration.getInterceptor();
@@ -138,18 +153,17 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
      * 调用视图函数，获取函数的返回值
      */
     private Object invokeViewMethod(Method method, FullHttpRequest request,
-                                    site.pushy.schlaframework.webmvc.pojo.HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
+                                    HttpRequest httpRequest, HttpResponse httpResponse) throws Exception {
         method.setAccessible(true);
         HandleMethodArgumentResolver resolver =
                 new HandleMethodArgumentResolver(method, request, httpRequest, httpResponse);
         List<Object> params = resolver.resolveParams();
 
         Object controller = MappingRegistry.getMethodController(method);
-        System.out.println("view method params => " + params);
         return method.invoke(controller, params.toArray());
     }
 
-    private FullHttpResponse generateFullHttpResponse(Object data, HttpResponse resp) {
+    private FullHttpResponse generateFullHttpResponse(Object data, HttpResponse resp, String sessionId) {
         String body;
         if (data.getClass() != String.class)
             body = JSON.toJSONString(data);
@@ -160,6 +174,12 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
         response.headers().set("Content-Type", resp.getContentType().value());
         response.headers().set("Date", new Date());
         response.headers().set("Server", "schla-webmvc/0.0.1");
+        if (sessionId != null) {
+            // 当 sessionId 为空时，说明该客户端是首次访问服务器（或者手动清除缓存和过期）
+            // 需要给客户端设置set-cookie头
+            response.headers().set(HttpHeaderNames.SET_COOKIE,
+                    ServerCookieEncoder.STRICT.encode(SessionHandler.COOKIE_NAME, sessionId));
+        }
         return response;
     }
 
@@ -197,8 +217,7 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
                 Unpooled.copiedBuffer(content, CharsetUtil.UTF_8));
         response.headers().set("Content-Type", ContentType.JSON.value());
         response.headers().set("Date", new Date());
-        response.headers().set("Server", "example-webmvc/0.0.1");
+        response.headers().set("Server", "schla-webmvc/0.0.1");
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
-
 }

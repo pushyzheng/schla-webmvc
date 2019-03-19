@@ -10,4 +10,11 @@ import java.lang.annotation.*;
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface FieldRequired {
+
+    /**
+     * 如果是字符串的字段的话，当notEmpty为true时，要求字符串不能为空字符串，即""
+     * @return
+     */
+    boolean notEmpty() default false;
+
 }

@@ -11,6 +11,12 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface QueryString {
 
+    /**
+     * 如果客户没有指定value值的话，编译必须加上 -parameters 参数
+     * @return
+     */
+    String value() default "";
+
     boolean required() default false;
 
 }

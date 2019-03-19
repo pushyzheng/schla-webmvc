@@ -19,4 +19,6 @@ public class HttpRequest {
 
     private HttpHeaders headers;
 
+    private HttpSession session;
+
 }
