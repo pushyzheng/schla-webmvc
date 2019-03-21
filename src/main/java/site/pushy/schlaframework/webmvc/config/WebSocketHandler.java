@@ -8,16 +8,10 @@ import site.pushy.schlaframework.webmvc.pojo.WebSocketSession;
  */
 public interface WebSocketHandler {
 
-    default void afterConnectionEstablished(WebSocketSession session) {
+    void afterConnectionEstablished(WebSocketSession session);
 
-    }
+    void processMessage(WebSocketSession session, String message);
 
-    default void processMessage(WebSocketSession session, String message) {
-
-    }
-
-    default void afterConnectionCloses(WebSocketSession session) {
-
-    }
+    void afterConnectionCloses(WebSocketSession session);
 
 }

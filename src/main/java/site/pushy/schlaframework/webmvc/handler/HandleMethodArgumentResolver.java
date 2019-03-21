@@ -53,9 +53,6 @@ public class HandleMethodArgumentResolver {
     public List<Object> resolveParams() {
         // 获取到POST/DELETE/PUT 提交的body内容数据
         String body = request.content().toString(CharsetUtil.UTF_8);
-        // 解析出请求的URL查询字符串参数和值
-        Map<String, String> queries = HttpUrlUtil.parseQueryString(request.uri());
-
         Parameter[] parameters = method.getParameters();
         for (Parameter parameter : parameters) {
             Class<?> paramType = parameter.getType();
@@ -71,7 +68,7 @@ public class HandleMethodArgumentResolver {
             }
             // 当参数被@QueryString注解时，检测参数是否不为空，然后转换成相应类型后存入参数列表
             else if (parameter.isAnnotationPresent(QueryString.class)) {
-                processQueryString(parameter, queries);
+                processQueryString(parameter);
             }
             // 当参数被@PathVariable注解时，解析路径的变量并存入参数列表中
             else if (parameter.isAnnotationPresent(PathVariable.class)) {
@@ -117,7 +114,10 @@ public class HandleMethodArgumentResolver {
         }
     }
 
-    private void processQueryString(Parameter parameter, Map<String, String> queries) {
+    private void processQueryString(Parameter parameter) {
+        // 解析出请求的URL查询字符串参数和值
+        Map<String, String> queries = HttpUrlUtil.parseQueryString(request.uri());
+
         Class<?> paramType = parameter.getType();
         QueryString anno = parameter.getAnnotation(QueryString.class);
         String name = parameter.getName();

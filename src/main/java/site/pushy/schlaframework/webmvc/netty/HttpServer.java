@@ -1,6 +1,6 @@
 package site.pushy.schlaframework.webmvc.netty;
 
-import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
+import site.pushy.schlaframework.webmvc.registry.WebSocketHandlerRegistry;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;

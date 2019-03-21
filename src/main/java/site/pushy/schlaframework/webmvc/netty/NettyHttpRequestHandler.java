@@ -1,21 +1,26 @@
 package site.pushy.schlaframework.webmvc.netty;
 
 import com.alibaba.fastjson.JSON;
+import io.netty.channel.ChannelFuture;
+import io.netty.handler.codec.http.cookie.Cookie;
+import io.netty.handler.codec.http.cookie.DefaultCookie;
 import io.netty.handler.codec.http.cookie.ServerCookieEncoder;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshaker;
+import io.netty.handler.codec.http.websocketx.WebSocketServerHandshakerFactory;
+import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import site.pushy.schlaframework.webmvc.config.HandlerInterceptor;
-import site.pushy.schlaframework.webmvc.config.InterceptorRegistration;
-import site.pushy.schlaframework.webmvc.config.InterceptorRegistry;
-import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
-import site.pushy.schlaframework.webmvc.core.MappingRegistry;
+import site.pushy.schlaframework.webmvc.config.*;
+import site.pushy.schlaframework.webmvc.registry.InterceptorRegistry;
+import site.pushy.schlaframework.webmvc.registry.MappingRegistry;
 import site.pushy.schlaframework.webmvc.enums.ContentType;
-import site.pushy.schlaframework.webmvc.enums.RequestMethod;
-import site.pushy.schlaframework.webmvc.exception.BaseException;
 import site.pushy.schlaframework.webmvc.exception.HttpBaseException;
 import site.pushy.schlaframework.webmvc.handler.HandleMethodArgumentResolver;
 import site.pushy.schlaframework.webmvc.handler.SessionHandler;
+import site.pushy.schlaframework.webmvc.handler.WebSocketHandshakeHandler;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
+import site.pushy.schlaframework.webmvc.registry.WebSocketHandlerRegistry;
+import site.pushy.schlaframework.webmvc.registry.WebSocketSessionRegistry;
 import site.pushy.schlaframework.webmvc.util.HttpUrlUtil;
 import site.pushy.schlaframework.webmvc.util.RespUtil;
 import site.pushy.schlaframework.webmvc.pojo.HttpResponse;
@@ -62,26 +67,60 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
 
     protected void channelRead0(ChannelHandlerContext ctx, FullHttpRequest request) throws Exception {
         this.context = ctx;
-        if (webSocketRegistry != null && webSocketRegistry.getPath().equalsIgnoreCase(request.uri())) {
-            if (webSocketRegistry.isAvailable()) {
-                ctx.fireChannelRead(request.retain());
-                return;
+        String uri = request.uri();
+        String wsUri = webSocketRegistry.getPath();
+
+        if (webSocketRegistry != null && webSocketRegistry.isAvailable()
+                && HttpUrlUtil.trimUri(uri).equalsIgnoreCase(wsUri)) {
+            processWebSocketHandShake(request);  // 处理webSocket拦截和握手
+        } else {
+            processHttpRequest(request);         // 处理正常的HTTP请求
+        }
+    }
+
+    /**
+     * process webSocket handShake
+     */
+    private void processWebSocketHandShake(FullHttpRequest request) throws Exception {
+        WebSocketHandshakeHandler handler = new WebSocketHandshakeHandler(webSocketRegistry);
+        boolean res = handler.doHandle(context, new HttpRequest(request));
+
+        // 开始握手
+        WebSocketServerHandshakerFactory factory = new WebSocketServerHandshakerFactory(
+                request.uri(), null, false
+        );
+        WebSocketServerHandshaker handshaker = factory.newHandshaker(request);
+        if (handshaker == null) {
+            WebSocketServerHandshakerFactory.sendUnsupportedVersionResponse(context.channel());
+        }
+        else {
+            ChannelFuture future = handshaker.handshake(context.channel(), request);
+            if (future.isSuccess()) {
+                logger.info("webSocket handshake succeed");
+                // 发出 HANDSHAKE_COMPLETE 事件
+                context.fireUserEventTriggered(WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE);
+            }
+            else {
+                context.fireExceptionCaught(future.cause());
             }
         }
+    }
+
+    private void processHttpRequest(FullHttpRequest request) throws Exception {
         if (HttpUtil.is100ContinueExpected(request)) {
             send100Continue();
         }
-        processRequest(request);
+        doProcessHttpRequest(request);
     }
 
-    private void processRequest(FullHttpRequest request) throws Exception {
+    private void doProcessHttpRequest(FullHttpRequest request) throws Exception {
         String uri = HttpUrlUtil.trimUri(request.uri());
         Method method = MappingRegistry.getUrlMethod(uri, request.method());
         Object controller = MappingRegistry.getMethodController(method);
         Object data;
         // 构造Response对象，注入到客户视图函数中
         final HttpResponse httpResponse = new HttpResponse(controller);
-        final HttpRequest httpRequest = convertHttpRequest(request);
+        final HttpRequest httpRequest = new HttpRequest(request);
 
         SessionHandler sessionHandler = new SessionHandler(request, httpRequest);
         String sessionId = sessionHandler.doHandle();
@@ -171,31 +210,18 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
             body = String.valueOf(data);
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 resp.getStatus(), Unpooled.copiedBuffer(body, CharsetUtil.UTF_8));
-        response.headers().set("Content-Type", resp.getContentType().value());
-        response.headers().set("Date", new Date());
-        response.headers().set("Server", "schla-webmvc/0.0.1");
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, resp.getContentType().value());
+        response.headers().set(HttpHeaderNames.DATE, new Date());
+        response.headers().set(HttpHeaderNames.SERVER, "schla-webmvc/0.0.1");
         if (sessionId != null) {
             // 当 sessionId 为空时，说明该客户端是首次访问服务器（或者手动清除缓存和过期）
             // 需要给客户端设置set-cookie头
-            response.headers().set(HttpHeaderNames.SET_COOKIE,
-                    ServerCookieEncoder.STRICT.encode(SessionHandler.COOKIE_NAME, sessionId));
+            Cookie cookie = new DefaultCookie("JSESSIONID", sessionId);
+            cookie.setPath("/");
+            String cookieStr = ServerCookieEncoder.STRICT.encode(cookie);
+            response.headers().set(HttpHeaderNames.SET_COOKIE, cookieStr);
         }
         return response;
-    }
-
-    /**
-     * 获取jobness-webmvc封装的HttpRequest对象
-     * 因为不能将Netty内置的 FullHttpRequest 暴露给客户使用
-     */
-    private HttpRequest convertHttpRequest(FullHttpRequest request) {
-        HttpRequest result = new HttpRequest();
-        RequestMethod requestMethod = RequestMethod.convertHttpMethod(request.method());
-
-        result.setMethod(requestMethod);
-        result.setUri(request.uri());
-        result.setVersion(request.protocolVersion().toString());
-        result.setHeaders(request.headers());
-        return result;
     }
 
     /**
@@ -215,9 +241,9 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
                 HttpResponseStatus.INTERNAL_SERVER_ERROR,
                 Unpooled.copiedBuffer(content, CharsetUtil.UTF_8));
-        response.headers().set("Content-Type", ContentType.JSON.value());
-        response.headers().set("Date", new Date());
-        response.headers().set("Server", "schla-webmvc/0.0.1");
+        response.headers().set(HttpHeaderNames.CONTENT_TYPE, ContentType.JSON.value());
+        response.headers().set(HttpHeaderNames.DATE, new Date());
+        response.headers().set(HttpHeaderNames.SERVER, "schla-webmvc/0.0.1");
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 }

@@ -3,7 +3,7 @@ package site.pushy.schlaframework.webmvc.handler;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.cookie.Cookie;
 import io.netty.handler.codec.http.cookie.ServerCookieDecoder;
-import site.pushy.schlaframework.webmvc.core.HttpSessionRegistry;
+import site.pushy.schlaframework.webmvc.registry.HttpSessionRegistry;
 import site.pushy.schlaframework.webmvc.pojo.HttpRequest;
 import site.pushy.schlaframework.webmvc.pojo.HttpSession;
 

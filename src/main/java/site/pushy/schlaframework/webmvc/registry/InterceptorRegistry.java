@@ -1,4 +1,7 @@
-package site.pushy.schlaframework.webmvc.config;
+package site.pushy.schlaframework.webmvc.registry;
+
+import site.pushy.schlaframework.webmvc.config.HandlerInterceptor;
+import site.pushy.schlaframework.webmvc.config.InterceptorRegistration;
 
 import java.util.ArrayList;
 import java.util.List;

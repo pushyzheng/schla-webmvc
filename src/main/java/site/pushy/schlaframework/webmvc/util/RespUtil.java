@@ -1,6 +1,7 @@
 package site.pushy.schlaframework.webmvc.util;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.serializer.SerializerFeature;
 import site.pushy.schlaframework.webmvc.pojo.BaseResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 
@@ -12,7 +13,7 @@ public class RespUtil {
 
     public static <T> String success(T data) {
         BaseResponse<T> response = new BaseResponse<>(data, "", HttpResponseStatus.OK.code());
-        return JSON.toJSONString(response);
+        return JSON.toJSONString(response, SerializerFeature.WriteMapNullValue);
     }
 
     public static String error(HttpResponseStatus status, String message) {

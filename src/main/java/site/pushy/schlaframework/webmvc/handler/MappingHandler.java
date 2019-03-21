@@ -4,7 +4,7 @@ import site.pushy.schlaframework.webmvc.annotation.RequestMapping;
 import site.pushy.schlaframework.webmvc.annotation.Controller;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.annotation.mapping.*;
-import site.pushy.schlaframework.webmvc.core.MappingRegistry;
+import site.pushy.schlaframework.webmvc.registry.MappingRegistry;
 import org.springframework.context.ApplicationContext;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 
@@ -50,7 +50,7 @@ public class MappingHandler {
             }
         }
 
-        MappingRegistry.printUrlMethodMapping();
+//        MappingRegistry.printUrlMethodMapping();
     }
 
     private void handleRestController() {

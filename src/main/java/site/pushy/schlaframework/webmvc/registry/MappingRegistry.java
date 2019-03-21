@@ -1,4 +1,4 @@
-package site.pushy.schlaframework.webmvc.core;
+package site.pushy.schlaframework.webmvc.registry;
 
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
 import io.netty.handler.codec.http.HttpMethod;

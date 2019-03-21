@@ -4,6 +4,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.websocketx.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author Pushy
  * @since 2019/3/10 19:29
@@ -11,6 +14,8 @@ import io.netty.handler.codec.http.websocketx.*;
 public class WebSocketSession {
 
     private Channel channel;
+
+    private Map<String, Object> attributes = new HashMap<>();
 
     public WebSocketSession() {
     }
@@ -49,6 +54,14 @@ public class WebSocketSession {
 
     public void closeSession() {
         channel.writeAndFlush(new CloseWebSocketFrame());
+    }
+
+    public Object getAttribute(String name) {
+        return attributes.get(name);
+    }
+
+    public void addAttribute(String name, Object value) {
+        attributes.put(name, value);
     }
 
 }

@@ -1,6 +1,6 @@
 package site.pushy.schlaframework.webmvc.netty;
 
-import site.pushy.schlaframework.webmvc.config.WebSocketHandlerRegistry;
+import site.pushy.schlaframework.webmvc.registry.WebSocketHandlerRegistry;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -33,7 +33,7 @@ public class SchlaChannelInitializer extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new ChunkedWriteHandler());                               // 写文件
         pipeline.addLast(new NettyHttpRequestHandler(appContext, webSocketRegistry));
         if (webSocketRegistry != null && webSocketRegistry.isAvailable()) {
-            pipeline.addLast(new WebSocketServerProtocolHandler(webSocketRegistry.getPath()));
+//            pipeline.addLast(new WebSocketServerProtocolHandler(webSocketRegistry.getPath()));
             pipeline.addLast(new TextWebSocketFrameHandler(webSocketRegistry));
         }
     }

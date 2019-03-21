@@ -1,6 +1,9 @@
 package site.pushy.schlaframework.webmvc.util;
 
+import io.netty.handler.codec.http.QueryStringDecoder;
+
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,29 +24,17 @@ public class HttpUrlUtil {
     }
 
     public static Map<String, String> parseQueryString(String uri) {
-        Map<String, String> result = new HashMap<>();
-
-        String[] arr = uri.split("\\?");
-        if (arr.length == 2) {
-            String[] items = arr[1].split("&");
-            for (String item : items) {
-                String[] queries = item.split("=");
-                result.put(queries[0], queries[1]);
-            }
+        Map<String, String> res = new HashMap<>();
+        QueryStringDecoder queryStringDecoder = new QueryStringDecoder(uri);
+        Map<String, List<String>> params = queryStringDecoder.parameters();
+        for (Map.Entry<String, List<String>> entry : params.entrySet()) {
+            res.put(entry.getKey(), entry.getValue().get(0));
         }
-        return result;
+        return res;
     }
 
     public static void parsePathVariable(String integralUri) {
         String uri = trimUri(integralUri);
-
-    }
-
-
-
-    public static void main(String[] args) {
-//        parseQueryString("https://localhost/users?name=Pushy");
-        parsePathVariable("/users/2");
     }
 
 }

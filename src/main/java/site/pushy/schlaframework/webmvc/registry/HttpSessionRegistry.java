@@ -1,4 +1,4 @@
-package site.pushy.schlaframework.webmvc.core;
+package site.pushy.schlaframework.webmvc.registry;
 
 import site.pushy.schlaframework.webmvc.pojo.HttpSession;
 import site.pushy.schlaframework.webmvc.util.UUIDUtil;
