@@ -1,5 +1,6 @@
 package site.pushy.schlaframework.webmvc.config;
 
+import site.pushy.schlaframework.webmvc.autoconfig.PropertiesConfigReader;
 import site.pushy.schlaframework.webmvc.exception.ConfigurationException;
 
 import java.util.ArrayList;

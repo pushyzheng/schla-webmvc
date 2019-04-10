@@ -1,8 +1,9 @@
 package site.pushy.schlaframework.webmvc.util;
 
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import site.pushy.schlaframework.webmvc.exception.ConfigPropertiesException;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,12 +16,10 @@ import java.util.Properties;
 public class ResourceUtil {
 
     public static Properties getProperties(Class<?> primarySource, String fileName) throws IOException {
-
+        Resource resource = new UrlResource(primarySource.getClassLoader().getResource(fileName));
         Properties properties = new Properties();
-        String path = primarySource.getClassLoader().getResource("").getPath();
-        InputStream inputStream;
+        InputStream inputStream = resource.getInputStream();
         try {
-            inputStream = new FileInputStream(path + "/" + fileName);
             properties.load(inputStream);
             return properties;
         } catch (FileNotFoundException e) {

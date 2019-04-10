@@ -4,6 +4,7 @@ import site.pushy.schlaframework.webmvc.annotation.RequestMapping;
 import site.pushy.schlaframework.webmvc.annotation.Controller;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.annotation.mapping.*;
+import site.pushy.schlaframework.webmvc.autoconfig.PropertiesConfigReader;
 import site.pushy.schlaframework.webmvc.registry.MappingRegistry;
 import org.springframework.context.ApplicationContext;
 import site.pushy.schlaframework.webmvc.enums.RequestMethod;
@@ -19,8 +20,11 @@ public class MappingHandler {
 
     private ApplicationContext context;
 
-    public MappingHandler(ApplicationContext context) {
+    private PropertiesConfigReader config;
+
+    public MappingHandler(ApplicationContext context, PropertiesConfigReader config) {
         this.context = context;
+        this.config = config;
     }
 
     public void doHandle() {
@@ -37,6 +41,7 @@ public class MappingHandler {
             Controller controllerAnno = c.getAnnotation(Controller.class);
             if (controllerAnno != null) {
                 StringBuilder url = new StringBuilder();
+                url.append(config.getDefaultPath());
                 url.append(controllerAnno.value());
                 // 遍历该Controller类所有带 @RequestMapping 注解的视图函数
                 // 并将 url -> 视图函数映射注册到视图中心类 MappingRegistry
@@ -44,13 +49,12 @@ public class MappingHandler {
                 for (Method method : methods) {
                     boolean res = registerViewMethod(method, url, controller, controllerAnno);
                     if (res) {
-                        url = new StringBuilder(controllerAnno.value());
+                        url = new StringBuilder(config.getDefaultPath());
+                        url.append(controllerAnno.value());
                     }
                 }
             }
         }
-
-//        MappingRegistry.printUrlMethodMapping();
     }
 
     private void handleRestController() {

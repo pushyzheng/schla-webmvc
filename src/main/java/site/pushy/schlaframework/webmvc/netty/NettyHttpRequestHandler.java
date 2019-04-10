@@ -96,7 +96,7 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
         else {
             ChannelFuture future = handshaker.handshake(context.channel(), request);
             if (future.isSuccess()) {
-                logger.info("webSocket handshake succeed");
+                logger.debug("webSocket handshake succeed");
                 // 发出 HANDSHAKE_COMPLETE 事件
                 context.fireUserEventTriggered(WebSocketServerProtocolHandler.ServerHandshakeStateEvent.HANDSHAKE_COMPLETE);
             }
@@ -114,6 +114,9 @@ public class NettyHttpRequestHandler extends SimpleChannelInboundHandler<FullHtt
     }
 
     private void doProcessHttpRequest(FullHttpRequest request) throws Exception {
+        String message = String.format("[%s] %s", request.method(), request.uri());
+        System.out.println(message);
+
         String uri = HttpUrlUtil.trimUri(request.uri());
         Method method = MappingRegistry.getUrlMethod(uri, request.method());
         Object controller = MappingRegistry.getMethodController(method);

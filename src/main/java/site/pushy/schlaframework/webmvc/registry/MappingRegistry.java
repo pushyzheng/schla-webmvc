@@ -14,15 +14,10 @@ import java.util.Map;
 public class MappingRegistry {
 
     // 接口Uri -> (Http方法 -> 视图函数)
-    private static Map<String, Map<RequestMethod, Method>> urlMethodMapping;
+    private final static Map<String, Map<RequestMethod, Method>> urlMethodMapping = new HashMap<>();
 
     // 视图函数 -> 函数的类
-    private static Map<Method, Object> methodControllerMapping;
-
-    static {
-        urlMethodMapping = new HashMap<>();
-        methodControllerMapping = new HashMap<>();
-    }
+    private final static Map<Method, Object> methodControllerMapping = new HashMap<>();
 
     public static void registerMapping(String url, RequestMethod requestMethod,
                                        Method method, Object controller) {

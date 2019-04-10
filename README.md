@@ -55,6 +55,49 @@ public class PostRestController {
 }
 ```
 
+## Package
+
+If you want to package your project to jar, you must add the maven plugin as follows in your `pom.xml`:
+
+```xml
+<build>
+    <plugins>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+                        <transformers>
+                            <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                <mainClass>change your main class</mainClass>
+                            </transformer>
+                        </transformers>
+                        <artifactSet>
+
+                        </artifactSet>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+```
+
 ## Features
 
 - Asynchronous HTTP request;

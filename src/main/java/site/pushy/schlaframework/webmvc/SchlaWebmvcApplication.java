@@ -1,9 +1,12 @@
 package site.pushy.schlaframework.webmvc;
 
 import site.pushy.schlaframework.webmvc.annotation.Controller;
+import site.pushy.schlaframework.webmvc.annotation.EnableMongoComponent;
+import site.pushy.schlaframework.webmvc.annotation.EnableRedisComponent;
 import site.pushy.schlaframework.webmvc.annotation.RestController;
 import site.pushy.schlaframework.webmvc.autoconfig.MybatisAutoConfiguration;
 import site.pushy.schlaframework.webmvc.autoconfig.AutoConfigRegistry;
+import site.pushy.schlaframework.webmvc.exception.ConfigPropertiesException;
 import site.pushy.schlaframework.webmvc.registry.InterceptorRegistry;
 import site.pushy.schlaframework.webmvc.config.SchlaMvcConfigurer;
 import site.pushy.schlaframework.webmvc.config.WebSocketConfigurer;
@@ -19,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import site.pushy.schlaframework.webmvc.util.StringUtil;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -38,6 +42,9 @@ public class SchlaWebmvcApplication {
     private static PropertiesConfigReader config;
 
     public static void run(Class<?> primarySource) {
+        if (primarySource == null) {
+            throw new ConfigPropertiesException("The primarySource cannot be null.");
+        }
         printBanner();
 
         try {
@@ -49,8 +56,8 @@ public class SchlaWebmvcApplication {
             context = new AnnotationConfigApplicationContext();
             context.register(MybatisAutoConfiguration.class);
             context.scan(config.getBasePackage());
-            registerMongoComponent();
-            registerRedisComponent();
+            registerMongoComponent(primarySource);
+            registerRedisComponent(primarySource);
             context.refresh();
 
             List<Class<? extends Annotation>> customAnnotation =
@@ -63,7 +70,7 @@ public class SchlaWebmvcApplication {
             registerInterceptor();
             WebSocketHandlerRegistry webSocketRegistry = registerWebSocket();
 
-            MappingHandler mappingHandler = new MappingHandler(context);
+            MappingHandler mappingHandler = new MappingHandler(context, config);
             mappingHandler.doHandle();
 
             HttpServer.setAppContext(context);
@@ -104,17 +111,21 @@ public class SchlaWebmvcApplication {
         }
     }
 
-    private static void registerMongoComponent() {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
-        builder.addConstructorArgValue(config.getMongoDatabaseName());
-        context.registerBeanDefinition(MongoComponent.class.getSimpleName(),
-                builder.getBeanDefinition());
+    private static void registerMongoComponent(Class<?> primarySource) {
+        if (primarySource.isAnnotationPresent(EnableMongoComponent.class)) {
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(MongoComponent.class);
+            builder.addConstructorArgValue(config.getMongoDatabaseName());
+            context.registerBeanDefinition(MongoComponent.class.getSimpleName(),
+                    builder.getBeanDefinition());
+        }
     }
 
-    private static void registerRedisComponent() {
-        BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(RedisComponent.class);
-        context.registerBeanDefinition(RedisComponent.class.getSimpleName(),
-                builder.getBeanDefinition());
+    private static void registerRedisComponent(Class<?> primarySource) {
+        if (primarySource.isAnnotationPresent(EnableRedisComponent.class)) {
+            BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(RedisComponent.class);
+            context.registerBeanDefinition(RedisComponent.class.getSimpleName(),
+                    builder.getBeanDefinition());
+        }
     }
 
     private static void printBanner() {

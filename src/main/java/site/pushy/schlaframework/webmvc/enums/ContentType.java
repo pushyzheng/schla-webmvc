@@ -7,8 +7,8 @@ package site.pushy.schlaframework.webmvc.enums;
 public enum ContentType {
 
     JSON("application/json; charset=UTF-8"),
-    HTML("text/html"),
-    PLAIN("text/plain");
+    HTML("text/html; charset=UTF-8"),
+    PLAIN("text/plain; charset=UTF-8");
 
     private String value;
 
